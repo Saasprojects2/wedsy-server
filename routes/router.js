@@ -8,5 +8,6 @@ router.get("/", function (req, res) {
 });
 
 //Importing other routes
+router.use("/decor", require("./decor"));
 
 module.exports = router;
