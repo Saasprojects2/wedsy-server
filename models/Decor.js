@@ -41,7 +41,7 @@ const DecorSchema = new mongoose.Schema(
       nameboardMaterial: { type: [String], required: true, default: [] },
     },
     productInfo: {
-      measurements: { type: String, required: true, default: "" },
+      measurements: { type: String, default: "" },
       costPrice: { type: Number, required: true, default: 0 },
       flowers: {
         artificial: { type: Number, required: true, default: 0 },
