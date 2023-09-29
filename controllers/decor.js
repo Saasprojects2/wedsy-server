@@ -47,22 +47,14 @@ const CreateNew = (req, res) => {
 const GetAll = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  // const skip = (page - 1) * limit;
-  // Decor.find({})
-  //   .skip(skip)
-  //   .limit(limit)
-  //   .exec()
-  //   .then((result) => {
-  //     res.send(result);
-  //   })
-  //   .catch((error) => {
-  //     res.status(400).send({ message: "error", error });
-  //   });
   Decor.countDocuments({})
     .then((total) => {
       const totalPages = Math.ceil(total / limit);
-      const validPage = Math.min(Math.max(page, 1), totalPages);
-      const skip = (validPage - 1) * limit;
+      const validPage = page % totalPages;
+      const skip =
+        validPage === 0 || validPage === null || validPage === undefined
+          ? 0
+          : (validPage - 1) * limit;
       Decor.find({})
         .skip(skip)
         .limit(limit)
@@ -71,11 +63,18 @@ const GetAll = (req, res) => {
           res.send(result);
         })
         .catch((error) => {
-          res.status(400).send({ message: "error", error });
+          res.status(400).send({
+            message: "error",
+            error,
+            data: { skip, validPage, totalPages, limit, page },
+          });
         });
     })
     .catch((error) => {
-      res.status(400).send({ message: "error", error });
+      res.status(400).send({
+        message: "error",
+        error,
+      });
     });
 };
 
