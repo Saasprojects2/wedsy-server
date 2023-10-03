@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const { VerifyOTP, SendOTP } = require("../utils/otp");
+const jwt = require("jsonwebtoken");
+const jwtConfig = require("../config/jwt");
 
 const Login = (req, res) => {
   const { name, phone, Otp, ReferenceId } = req.body;
@@ -66,7 +68,7 @@ const Get = (req, res) => {
 
 const GetOTP = (req, res) => {
   const { phone } = req.body;
-  if (phone && phone.length !== 13) {
+  if (!phone || phone.length !== 13) {
     res.status(400).send({ message: "incorrect phone number" });
   } else {
     SendOTP(phone)
