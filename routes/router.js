@@ -9,6 +9,7 @@ router.get("/", function (req, res) {
 
 //Importing other routes
 router.use("/auth", require("./auth"));
+router.use("/user", require("./user"));
 router.use("/enquiry", require("./enquiry"));
 router.use("/decor", require("./decor"));
 
