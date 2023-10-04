@@ -2,7 +2,8 @@ const User = require("../models/User");
 
 const AddToWishList = (req, res) => {
   const { user_id } = req.auth;
-  const { _id, wishlist } = req.body;
+  const { wishlist } = req.params;
+  const { _id } = req.body;
   if (!_id || !wishlist) {
     res.status(400).send({ message: "Incomplete Data" });
   } else if (wishlist === "decor") {
@@ -12,7 +13,39 @@ const AddToWishList = (req, res) => {
     )
       .exec()
       .then((result) => {
-        res.send({ message: "success" });
+        if (result) {
+          res.send({ message: "success" });
+        } else {
+          res.status(400).send();
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  }
+};
+
+const RemoveFromWishList = (req, res) => {
+  const { user_id } = req.auth;
+  const { wishlist } = req.params;
+  const { _id } = req.body;
+  if (!_id || !wishlist) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else if (wishlist === "decor") {
+    User.findByIdAndUpdate(
+      { _id: user_id },
+      { $pull: { "wishlist.decor": _id } }
+    )
+      .exec()
+      .then((result) => {
+        if (result) {
+          res.send({ message: "success" });
+        } else {
+          res.status(400).send();
+        }
       })
       .catch((error) => {
         res.status(400).send({
@@ -49,4 +82,39 @@ const GetWishList = (req, res) => {
   }
 };
 
-module.exports = { AddToWishList, GetWishList, GetWishListAll };
+const IsAddedToWishlist = (req, res) => {
+  const { _id, product } = req.query;
+  const { user_id } = req.auth;
+  if (!product || !_id) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    User.findById({ _id: user_id }, "wishlist")
+      .exec()
+      .then((result) => {
+        const { wishlist } = result;
+        if (product === "decor") {
+          if (wishlist.decor.includes(_id)) {
+            res.send({ message: "success", wishlist: true });
+          } else {
+            res.send({ message: "success", wishlist: false });
+          }
+        } else {
+          res.send({ message: "success", wishlist: false });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  }
+};
+
+module.exports = {
+  AddToWishList,
+  GetWishList,
+  GetWishListAll,
+  RemoveFromWishList,
+  IsAddedToWishlist,
+};
