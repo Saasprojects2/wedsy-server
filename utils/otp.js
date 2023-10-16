@@ -1,7 +1,7 @@
 const axios = require("axios");
 const crypto = require("crypto-js");
 const uniqid = require("uniqid");
-// console.log(uniqid());
+
 function getAmzDate(dateStr) {
   const chars = [":", "-"];
   for (let i = 0; i < chars.length; i++) {
@@ -54,57 +54,59 @@ const getAuthHeaders = ({ payload, path }) => {
 const SendOTP = (phone) => {
   return new Promise(async (resolve, reject) => {
     let ReferenceId = uniqid();
-    const data = JSON.stringify({
-      Channel: "SMS",
-      BrandName: "Vvarin",
-      CodeLength: 6,
-      ValidityPeriod: 10,
-      AllowedAttempts: 3,
-      Language: "en-US",
-      OriginationIdentity: process.env.AWS_PINPOINT_SENDER_ID,
-      DestinationIdentity: phone,
-      ReferenceId,
-    });
-    const path = `/v1/apps/${process.env.AWS_PINPOINT_PROJECT_ID}/otp`;
-    const headers = await getAuthHeaders({ payload: data, path });
-    axios({
-      method: "post",
-      url: `https://${process.env.AWS_PINPOINT_ENDPOINT}${path}`,
-      headers,
-      data,
-    })
-      .then(function (response) {
-        resolve({ ...response.data, ReferenceId });
-      })
-      .catch(function (error) {
-        console.log(error.response.data);
-        reject(error.response.data);
-      });
+    resolve({ ReferenceId });
+    // const data = JSON.stringify({
+    //   Channel: "SMS",
+    //   BrandName: "Vvarin",
+    //   CodeLength: 6,
+    //   ValidityPeriod: 10,
+    //   AllowedAttempts: 3,
+    //   Language: "en-US",
+    //   OriginationIdentity: process.env.AWS_PINPOINT_SENDER_ID,
+    //   DestinationIdentity: phone,
+    //   ReferenceId,
+    // });
+    // const path = `/v1/apps/${process.env.AWS_PINPOINT_PROJECT_ID}/otp`;
+    // const headers = await getAuthHeaders({ payload: data, path });
+    // axios({
+    //   method: "post",
+    //   url: `https://${process.env.AWS_PINPOINT_ENDPOINT}${path}`,
+    //   headers,
+    //   data,
+    // })
+    //   .then(function (response) {
+    //     resolve({ ...response.data, ReferenceId });
+    //   })
+    //   .catch(function (error) {
+    //     console.log(error.response.data);
+    //     reject(error.response.data);
+    //   });
   });
 };
 
 const VerifyOTP = (phone, ReferenceId, Otp) => {
   return new Promise(async (resolve, reject) => {
-    const data = JSON.stringify({
-      DestinationIdentity: phone,
-      ReferenceId,
-      Otp,
-    });
-    const path = `/v1/apps/${process.env.AWS_PINPOINT_PROJECT_ID}/verify-otp`;
-    const headers = await getAuthHeaders({ payload: data, path });
-    axios({
-      method: "post",
-      url: `https://${process.env.AWS_PINPOINT_ENDPOINT}${path}`,
-      headers,
-      data,
-    })
-      .then(function (response) {
-        resolve(response.data);
-      })
-      .catch(function (error) {
-        console.log(error.response.data);
-        reject(error.response.data);
-      });
+    resolve({ Valid: true });
+    // const data = JSON.stringify({
+    //   DestinationIdentity: phone,
+    //   ReferenceId,
+    //   Otp,
+    // });
+    // const path = `/v1/apps/${process.env.AWS_PINPOINT_PROJECT_ID}/verify-otp`;
+    // const headers = await getAuthHeaders({ payload: data, path });
+    // axios({
+    //   method: "post",
+    //   url: `https://${process.env.AWS_PINPOINT_ENDPOINT}${path}`,
+    //   headers,
+    //   data,
+    // })
+    //   .then(function (response) {
+    //     resolve(response.data);
+    //   })
+    //   .catch(function (error) {
+    //     console.log(error.response.data);
+    //     reject(error.response.data);
+    //   });
   });
 };
 
