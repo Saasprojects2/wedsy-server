@@ -47,7 +47,26 @@ const CreateNew = (req, res) => {
 const GetAll = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  Decor.countDocuments({})
+  const { category, occassion, color, priceLower, priceHigher } = req.query;
+  const query = {};
+  if (category) {
+    query.category = category;
+  }
+  if (occassion) {
+    query["productVariation.occassion"] = { $in: occassion.split("|") };
+  }
+  if (color) {
+    query["productVariation.color"] = { $in: color.split("|") };
+  }
+  if (priceLower && priceHigher) {
+    query.productInfo.costPrice = { $gte: priceLower, $lte: priceHigher };
+  } else if (priceLower) {
+    query.productInfo.costPrice = { $gte: priceLower };
+  } else if (priceHigher) {
+    query.productInfo.costPrice = { $lte: priceHigher };
+  }
+
+  Decor.countDocuments(query)
     .then((total) => {
       const totalPages = Math.ceil(total / limit);
       const validPage = page % totalPages;
@@ -55,7 +74,7 @@ const GetAll = (req, res) => {
         validPage === 0 || validPage === null || validPage === undefined
           ? 0
           : (validPage - 1) * limit;
-      Decor.find({})
+      Decor.find(query)
         .skip(skip)
         .limit(limit)
         .exec()
@@ -66,7 +85,6 @@ const GetAll = (req, res) => {
           res.status(400).send({
             message: "error",
             error,
-            data: { skip, validPage, totalPages, limit, page },
           });
         });
     })
