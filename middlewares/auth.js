@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Admin = require("../models/Admin");
 
 function CheckLogin(req, res, next) {
   if (!req.headers.authorization) {
@@ -15,8 +16,21 @@ function CheckLogin(req, res, next) {
     if (err) {
       res.status(400).send({ message: "error", error: err });
     } else {
-      const { _id } = result;
-      if (_id) {
+      const { _id, isAdmin } = result;
+      if (_id && isAdmin) {
+        Admin.findById({ _id })
+          .then((user) => {
+            if (!user) {
+              res.status(401).send({ message: "invalid user" });
+            } else {
+              req.auth = { user_id: _id, user, roles: user.roles };
+              next();
+            }
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      } else if (_id) {
         User.findById({ _id })
           .then((user) => {
             if (!user) {
