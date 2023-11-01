@@ -5,6 +5,7 @@ const EnquirySchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
+    email: { type: String, default: "" },
     verified: { type: Boolean, default: false, required: true },
     source: { type: String, required: true, default: "Default" },
   },
