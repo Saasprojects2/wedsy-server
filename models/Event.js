@@ -13,6 +13,34 @@ const EventSchema = new mongoose.Schema(
           date: { type: String, required: true },
           time: { type: String, required: true },
           venue: { type: String, required: true },
+          decorItems: {
+            type: [
+              {
+                decor: { type: ObjectId, ref: "Decor" },
+                plaform: { type: Boolean, default: false },
+                carpet: { type: String, default: "" },
+                dimensions: {
+                  length: { type: Number, default: 0 },
+                  bredth: { type: Number, default: 0 },
+                  height: { type: Number, default: 0 },
+                },
+                price: { type: Number, default: 0 },
+                category: {
+                  type: String,
+                  required: true,
+                  enum: [
+                    "Stage",
+                    "Pathway",
+                    "Entrance",
+                    "Photobooth",
+                    "Mandap",
+                    "Nameboard",
+                  ],
+                },
+              },
+            ],
+            default: [],
+          },
         },
       ],
       default: [],
