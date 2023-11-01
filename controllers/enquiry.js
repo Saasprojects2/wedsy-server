@@ -99,4 +99,38 @@ const CreateNew = (req, res) => {
   }
 };
 
-module.exports = { CreateNew };
+const GetAll = (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const { source } = req.query;
+  const query = {};
+  if (source) {
+    query.source = source;
+  }
+  Enquiry.countDocuments(query)
+    .then((total) => {
+      const totalPages = Math.ceil(total / limit);
+      const skip = (page - 1) * limit;
+      Enquiry.find(query)
+        .skip(skip)
+        .limit(limit)
+        .exec()
+        .then((result) => {
+          res.send({ list: result, totalPages, page, limit });
+        })
+        .catch((error) => {
+          res.status(400).send({
+            message: "error",
+            error,
+          });
+        });
+    })
+    .catch((error) => {
+      res.status(400).send({
+        message: "error",
+        error,
+      });
+    });
+};
+
+module.exports = { CreateNew, GetAll };
