@@ -16,12 +16,14 @@ const EventSchema = new mongoose.Schema(
           decorItems: {
             type: [
               {
+                quantity: { type: Number, default: 1 },
+                unit: { type: String, default: "" },
                 decor: { type: ObjectId, ref: "Decor" },
-                plaform: { type: Boolean, default: false },
-                carpet: { type: String, default: "" },
+                platform: { type: Boolean, default: false },
+                flooring: { type: String, default: "" },
                 dimensions: {
                   length: { type: Number, default: 0 },
-                  bredth: { type: Number, default: 0 },
+                  breadth: { type: Number, default: 0 },
                   height: { type: Number, default: 0 },
                 },
                 price: { type: Number, default: 0 },
@@ -37,9 +39,19 @@ const EventSchema = new mongoose.Schema(
                     "Nameboard",
                   ],
                 },
+                variant: {
+                  type: String,
+                  required: true,
+                  enum: ["artificialFlowers", "naturalFlowers", "mixedFlowers"],
+                },
               },
             ],
             default: [],
+          },
+          status: {
+            finalized: { type: Boolean, default: false },
+            approved: { type: Boolean, default: false },
+            paymentDone: { type: Boolean, default: false },
           },
         },
       ],

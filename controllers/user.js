@@ -1,5 +1,52 @@
 const User = require("../models/User");
 
+const GetUser = (req, res) => {
+  const { user_id } = req.auth;
+  User.findById({ _id: user_id })
+    .exec()
+    .then((result) => {
+      if (result) {
+        const { name, phone, email, address } = result;
+        res.send({ name, phone, email, address });
+      } else {
+        res.status(404).send();
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({
+        message: "error",
+        error,
+      });
+    });
+};
+
+const UpdateUser = (req, res) => {
+  const { user_id } = req.auth;
+  const { name, phone, email, address } = req.body;
+  if ((!name || !email || !phone) && !address) {
+    res.status(400).send();
+    return;
+  }
+  User.findByIdAndUpdate(
+    { _id: user_id },
+    { $set: name ? { name, phone, email } : { address } }
+  )
+    .exec()
+    .then((result) => {
+      if (result) {
+        res.send({ message: "success" });
+      } else {
+        res.status(400).send();
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({
+        message: "error",
+        error,
+      });
+    });
+};
+
 const AddToWishList = (req, res) => {
   const { user_id } = req.auth;
   const { wishlist } = req.params;
@@ -112,6 +159,8 @@ const IsAddedToWishlist = (req, res) => {
 };
 
 module.exports = {
+  GetUser,
+  UpdateUser,
   AddToWishList,
   GetWishList,
   GetWishListAll,

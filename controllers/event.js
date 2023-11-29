@@ -31,10 +31,99 @@ const AddEventDay = (req, res) => {
   } else {
     Event.findByIdAndUpdate(
       { _id, user: user_id },
-      { $addToSet: { eventDays: { name, date, time, venue } } }
+      {
+        $addToSet: {
+          eventDays: {
+            name,
+            date,
+            time,
+            venue,
+            decorItems: [],
+            status: { finalized: false, approved: false, paymentDone: false },
+          },
+        },
+      }
     )
       .then((result) => {
         res.status(200).send({ message: "success" });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const AddDecorInEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  const {
+    decor,
+    platform,
+    flooring,
+    dimensions,
+    price,
+    category,
+    variant,
+    quantity,
+    unit,
+  } = req.body;
+  if (!decor || !category || !variant || !price || platform === undefined) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $addToSet: {
+          "eventDays.$.decorItems": {
+            quantity,
+            unit,
+            decor,
+            platform,
+            flooring,
+            dimensions,
+            price,
+            category,
+            variant,
+          },
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const RemoveDecorInEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor } = req.body;
+  if (!decor) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $pull: {
+          "eventDays.$.decorItems": {
+            decor,
+          },
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
       })
       .catch((error) => {
         res.status(400).send({ message: "error", error });
@@ -53,15 +142,42 @@ const GetAll = (req, res) => {
       res.status(400).send({
         message: "error",
         error,
-        data: { skip, validPage, totalPages, limit, page },
       });
+    });
+};
+
+const FinalizeEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  Event.findOneAndUpdate(
+    { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+    {
+      $set: {
+        "eventDays.$.status.finalized": true,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
     });
 };
 
 const Get = (req, res) => {
   const { user_id } = req.auth;
   const { _id } = req.params;
-  Event.findById({ _id, user: user_id })
+  const { populate } = req.query;
+  let query = Event.findById({ _id, user: user_id });
+  if (populate === "true") {
+    query = query.populate("eventDays.decorItems.decor");
+  }
+  query
     .then((result) => {
       if (!result) {
         res.status(404).send();
@@ -74,4 +190,12 @@ const Get = (req, res) => {
     });
 };
 
-module.exports = { CreateNew, GetAll, Get, AddEventDay };
+module.exports = {
+  CreateNew,
+  GetAll,
+  Get,
+  AddEventDay,
+  AddDecorInEventDay,
+  RemoveDecorInEventDay,
+  FinalizeEventDay,
+};

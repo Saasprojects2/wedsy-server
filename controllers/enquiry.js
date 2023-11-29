@@ -3,6 +3,7 @@ const User = require("../models/User");
 const { VerifyOTP } = require("../utils/otp");
 const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
+const Event = require("../models/Event");
 
 const CreateNew = (req, res) => {
   const { name, phone, verified, source, Otp, ReferenceId } = req.body;
@@ -133,4 +134,127 @@ const GetAll = (req, res) => {
     });
 };
 
-module.exports = { CreateNew, GetAll };
+const Get = (req, res) => {
+  const { _id } = req.params;
+  Enquiry.findById({ _id })
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        User.findOne({ phone: result.phone })
+          .then((user) => {
+            if (!user) {
+              res.send({ ...result.toObject(), userCreated: false });
+            } else {
+              Event.find({ user: user._id })
+                .then((events) => {
+                  res.send({
+                    ...result.toObject(),
+                    userCreated: true,
+                    user,
+                    events,
+                  });
+                })
+                .catch((error) => {
+                  res.status(400).send({ message: "error", error });
+                });
+            }
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const CreateUser = (req, res) => {
+  const { _id } = req.params;
+  Enquiry.findById({ _id })
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        new User({
+          name: result.name,
+          phone: result.phone,
+        })
+          .save()
+          .then((user) => {
+            res.send({ message: "success" });
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const AddConversation = (req, res) => {
+  const { _id } = req.params;
+  const { conversation } = req.body;
+  Enquiry.findByIdAndUpdate(
+    { _id },
+    { $addToSet: { "updates.conversations": conversation } }
+  )
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ message: "success" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const UpdateNotes = (req, res) => {
+  const { _id } = req.params;
+  const { notes } = req.body;
+  Enquiry.findByIdAndUpdate({ _id }, { $set: { "updates.notes": notes } })
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ message: "success" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const UpdateCallSchedule = (req, res) => {
+  const { _id } = req.params;
+  const { callSchedule } = req.body;
+  Enquiry.findByIdAndUpdate(
+    { _id },
+    { $set: { "updates.callSchedule": callSchedule } }
+  )
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ message: "success" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+module.exports = {
+  CreateNew,
+  GetAll,
+  Get,
+  CreateUser,
+  AddConversation,
+  UpdateNotes,
+  UpdateCallSchedule,
+};

@@ -8,6 +8,11 @@ const EnquirySchema = new mongoose.Schema(
     email: { type: String, default: "" },
     verified: { type: Boolean, default: false, required: true },
     source: { type: String, required: true, default: "Default" },
+    updates: {
+      conversations: { type: [String], default: [] },
+      notes: { type: String, default: "" },
+      callSchedule: { type: Date, default: "" },
+    },
   },
   { timestamps: true }
 );

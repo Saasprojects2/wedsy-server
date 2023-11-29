@@ -125,8 +125,8 @@ const AdminLogin = (req, res) => {
 
 const Get = (req, res) => {
   const { user } = req.auth;
-  const { name, phone } = user;
-  res.send({ name, phone });
+  const { name, phone, email } = user;
+  res.send({ name, phone, email });
 };
 
 const GetAdmin = (req, res) => {

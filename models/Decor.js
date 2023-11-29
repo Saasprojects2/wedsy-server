@@ -31,23 +31,47 @@ const DecorSchema = new mongoose.Schema(
       colors: { type: [String], required: true, default: [] },
       occassion: { type: [String], required: true, default: [] },
       flowers: { type: [String], required: true, default: [] },
-      fabric: { type: String, default: "" },
+      fabric: { type: [String], default: [] },
       style: {
         type: String,
         required: false,
         enum: ["Modern", "Traditional", ""],
         default: "",
       },
-      // nameboardMaterial: { type: [String], required: true, default: [] },
+      nameboardMaterial: { type: [String], default: [] },
     },
     productInfo: {
       id: { type: String, default: "" },
-      measurements: { type: String, default: "" },
-      costPrice: { type: Number, required: true, default: 0 },
+      measurements: {
+        length: { type: Number, default: 0 },
+        width: { type: Number, default: 0 },
+        height: { type: Number, default: 0 },
+        area: { type: Number, default: 0 },
+        radius: { type: Number, default: 0 },
+        other: { type: String, default: "" },
+      },
       flowers: {
         artificial: { type: Number, required: true, default: 0 },
         mixed: { type: Number, required: true, default: 0 },
         natural: { type: Number, required: true, default: 0 },
+      },
+      included: { type: [String], default: [] },
+      variant: {
+        artificialFlowers: {
+          costPrice: { type: Number, required: true, default: 0 },
+          sellingPrice: { type: Number, required: true, default: 0 },
+          discount: { type: Number, required: true, default: 0 },
+        },
+        mixedFlowers: {
+          costPrice: { type: Number, required: true, default: 0 },
+          sellingPrice: { type: Number, required: true, default: 0 },
+          discount: { type: Number, required: true, default: 0 },
+        },
+        naturalFlowers: {
+          costPrice: { type: Number, required: true, default: 0 },
+          sellingPrice: { type: Number, required: true, default: 0 },
+          discount: { type: Number, required: true, default: 0 },
+        },
       },
       discount: { type: Number, required: true, default: 0 },
       quantity: { type: Number, required: true, default: 1 },
@@ -61,5 +85,7 @@ const DecorSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+DecorSchema.index({ name: "text", description: "text" });
 
 module.exports = mongoose.model("Decor", DecorSchema);
