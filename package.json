@@ -22,6 +22,7 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.1",
+    "razorpay": "^2.9.2",
     "uniqid": "^5.4.0"
   }
 }
