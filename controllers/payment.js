@@ -109,19 +109,29 @@ const UpdatePayment = (req, res) => {
                 res.status(200).send({ message: "success" });
               })
               .catch((error) => {
-                res.status(400).send({ message: "error1", error });
+                res.status(400).send({ message: "error", error });
               });
           })
           .catch((error) => {
-            res.status(400).send({ message: "error2", error });
+            res.status(400).send({ message: "error", error });
           });
       } else {
         res.status(200).send({ message: "success" });
       }
     })
     .catch((error) => {
-      res.status(400).send({ message: "error3", error });
+      res.status(400).send({ message: "error", error });
     });
 };
 
-module.exports = { CreateEventPayment, UpdatePayment };
+const GetAllPayments = (req, res) => {
+  const { user_id } = req.auth;
+  Payment.find({ user: user_id })
+    .populate("event")
+    .then((result) => res.status(200).send(result))
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+module.exports = { CreateEventPayment, UpdatePayment, GetAllPayments };
