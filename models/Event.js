@@ -3,7 +3,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const EventSchema = new mongoose.Schema(
   {
-    user: { type: ObjectId, ref: "Decor", required: true },
+    user: { type: ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
     community: { type: String, default: "" },
     eventDays: {
