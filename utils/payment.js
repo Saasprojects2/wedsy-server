@@ -51,7 +51,6 @@ const GetPaymentStatus = ({ order_id, response }) => {
       if (err) {
         reject({ message: "error", err });
       } else {
-        console.log(order);
         Payment.findOneAndUpdate(
           { razporPayId: order_id },
           {
