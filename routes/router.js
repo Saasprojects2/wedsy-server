@@ -13,5 +13,6 @@ router.use("/user", require("./user"));
 router.use("/enquiry", require("./enquiry"));
 router.use("/decor", require("./decor"));
 router.use("/event", require("./event"));
+router.use("/payment", require("./payment"));
 
 module.exports = router;
