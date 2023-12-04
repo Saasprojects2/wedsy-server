@@ -50,11 +50,6 @@ const DecorSchema = new mongoose.Schema(
         radius: { type: Number, default: 0 },
         other: { type: String, default: "" },
       },
-      flowers: {
-        artificial: { type: Number, required: true, default: 0 },
-        mixed: { type: Number, required: true, default: 0 },
-        natural: { type: Number, required: true, default: 0 },
-      },
       included: { type: [String], default: [] },
       variant: {
         artificialFlowers: {
@@ -73,7 +68,6 @@ const DecorSchema = new mongoose.Schema(
           discount: { type: Number, required: true, default: 0 },
         },
       },
-      discount: { type: Number, required: true, default: 0 },
       quantity: { type: Number, required: true, default: 1 },
       SKU: { type: String, default: "" },
     },
