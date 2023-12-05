@@ -17,7 +17,8 @@ const DecorSchema = new mongoose.Schema(
     label: {
       type: String,
       required: false,
-      enum: ["BestSeller", "Popular", ""],
+      // enum: ["BestSeller", "Popular", ""],
+      default: "",
     },
     name: { type: String, required: true },
     unit: { type: String, required: true },
