@@ -36,7 +36,7 @@ const CreateNew = (req, res) => {
     })
       .save()
       .then((result) => {
-        res.status(201).send();
+        res.status(201).send({ message: "success", id: result._id });
       })
       .catch((error) => {
         res.status(400).send({ message: "error", error });
