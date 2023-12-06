@@ -197,4 +197,72 @@ const Get = (req, res) => {
     });
 };
 
-module.exports = { CreateNew, GetAll, Get };
+const Update = (req, res) => {
+  const { _id } = req.params;
+  const {
+    category,
+    label,
+    name,
+    unit,
+    tags,
+    image,
+    thumbnail,
+    video,
+    description,
+    pdf,
+    productVariation,
+    productInfo,
+    seoTags,
+  } = req.body;
+  if (!name || !category) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          category,
+          label,
+          name,
+          unit,
+          tags,
+          image,
+          thumbnail,
+          video,
+          description,
+          pdf,
+          productVariation,
+          productInfo,
+          seoTags,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const Delete = (req, res) => {
+  const { _id } = req.params;
+  Decor.findByIdAndDelete({ _id })
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+module.exports = { CreateNew, GetAll, Get, Update, Delete };
