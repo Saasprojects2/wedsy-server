@@ -23,7 +23,12 @@ function CheckLogin(req, res, next) {
             if (!user) {
               res.status(401).send({ message: "invalid user" });
             } else {
-              req.auth = { user_id: _id, user, roles: user.roles };
+              req.auth = {
+                user_id: _id,
+                user,
+                roles: user.roles,
+                isAdmin: true,
+              };
               next();
             }
           })
@@ -36,7 +41,7 @@ function CheckLogin(req, res, next) {
             if (!user) {
               res.status(401).send({ message: "invalid user" });
             } else {
-              req.auth = { user_id: _id, user };
+              req.auth = { user_id: _id, user, isAdmin: false };
               next();
             }
           })
@@ -71,7 +76,12 @@ function CheckAdminLogin(req, res, next) {
             if (!user) {
               res.status(401).send({ message: "invalid user" });
             } else {
-              req.auth = { user_id: _id, user, roles: user.roles };
+              req.auth = {
+                user_id: _id,
+                user,
+                roles: user.roles,
+                isAdmin: true,
+              };
               next();
             }
           })
