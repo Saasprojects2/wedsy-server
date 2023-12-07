@@ -125,13 +125,81 @@ const UpdatePayment = (req, res) => {
 };
 
 const GetAllPayments = (req, res) => {
-  const { user_id } = req.auth;
-  Payment.find({ user: user_id })
-    .populate("event")
-    .then((result) => res.status(200).send(result))
-    .catch((error) => {
-      res.status(400).send({ message: "error", error });
-    });
+  const { user_id, isAdmin } = req.auth;
+  if (isAdmin) {
+    // Admin Controller
+    const { status, sort } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const query = {};
+    const sortQuery = {};
+    if (status) {
+      query.status = status;
+    }
+    if (sort) {
+      if (sort === "Amount:Low-to-High") {
+        sortQuery["amount"] = 1;
+      } else if (sort === "Amount:High-to-Low") {
+        sortQuery["amount"] = -1;
+      }
+    }
+    Payment.countDocuments(query)
+      .then(async (total) => {
+        const totalPages = Math.ceil(total / limit);
+        const validPage = page % totalPages;
+        const skip =
+          validPage === 0 || validPage === null || validPage === undefined
+            ? 0
+            : (validPage - 1) * limit;
+        const allPayments = await Payment.find({});
+        const { totalAmount, amountPaid, amountDue } = allPayments.reduce(
+          (accumulator, payment) => {
+            accumulator.totalAmount += payment.amount;
+            accumulator.amountPaid += payment.amountPaid;
+            accumulator.amountDue += payment.amountDue;
+            return accumulator;
+          },
+          { totalAmount: 0, amountPaid: 0, amountDue: 0 }
+        );
+        Payment.find(query)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limit)
+          .populate("user event")
+          .exec()
+          .then((result) => {
+            res.send({
+              list: result,
+              totalPages,
+              page,
+              limit,
+              totalAmount,
+              amountPaid,
+              amountDue,
+            });
+          })
+          .catch((error) => {
+            res.status(400).send({
+              message: "error",
+              error,
+            });
+          });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  } else {
+    // User Controller
+    Payment.find({ user: user_id })
+      .populate("event")
+      .then((result) => res.status(200).send(result))
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
 };
 
 module.exports = { CreateEventPayment, UpdatePayment, GetAllPayments };
