@@ -15,5 +15,6 @@ router.use("/decor", require("./decor"));
 router.use("/event", require("./event"));
 router.use("/payment", require("./payment"));
 router.use("/file", require("./file"));
+router.use("/quotation", require("./quotation"));
 
 module.exports = router;
