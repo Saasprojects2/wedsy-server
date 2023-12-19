@@ -80,7 +80,7 @@ const GetAll = (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: new RegExp(search, "i") } },
-        { description: { $regex: new RegExp(search, "i") } },
+        // { description: { $regex: new RegExp(search, "i") } },
         { tags: { $regex: new RegExp(search, "i") } },
         { "productInfo.includes": { $regex: new RegExp(search, "i") } },
       ];
