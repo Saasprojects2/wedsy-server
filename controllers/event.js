@@ -22,6 +22,29 @@ const CreateNew = (req, res) => {
   }
 };
 
+const Update = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id } = req.params;
+  const { name, community } = req.body;
+  if (!name || !community) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id },
+      {
+        name,
+        community,
+      }
+    )
+      .then((result) => {
+        res.status(200).send({ message: "success" });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const AddEventDay = (req, res) => {
   const { user_id } = req.auth;
   const { _id } = req.params;
@@ -29,7 +52,7 @@ const AddEventDay = (req, res) => {
   if (!name || !date || !time || !venue) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
-    Event.findByIdAndUpdate(
+    Event.findOneAndUpdate(
       { _id, user: user_id },
       {
         $addToSet: {
@@ -41,6 +64,32 @@ const AddEventDay = (req, res) => {
             decorItems: [],
             status: { finalized: false, approved: false, paymentDone: false },
           },
+        },
+      }
+    )
+      .then((result) => {
+        res.status(200).send({ message: "success" });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+const UpdateEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, eventDay } = req.params;
+  const { name, date, time, venue } = req.body;
+  if (!name || !date || !time || !venue || !eventDay) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id, "eventDays._id": eventDay },
+      {
+        $set: {
+          "eventDays.$.name": name,
+          "eventDays.$.date": date,
+          "eventDays.$.time": time,
+          "eventDays.$.venue": venue,
         },
       }
     )
@@ -192,10 +241,12 @@ const Get = (req, res) => {
 
 module.exports = {
   CreateNew,
+  Update,
   GetAll,
   Get,
   AddEventDay,
   AddDecorInEventDay,
   RemoveDecorInEventDay,
   FinalizeEventDay,
+  UpdateEventDay,
 };
