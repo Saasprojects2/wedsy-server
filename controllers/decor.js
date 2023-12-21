@@ -56,6 +56,12 @@ const GetAll = (req, res) => {
     sort,
     stageSizeLower,
     stageSizeHigher,
+    stageLengthLower,
+    stageLengthHigher,
+    stageWidthLower,
+    stageWidthHigher,
+    stageHeightLower,
+    stageHeightHigher,
     priceLower,
     priceHigher,
     checkId,
@@ -85,6 +91,7 @@ const GetAll = (req, res) => {
         { "productInfo.includes": { $regex: new RegExp(search, "i") } },
       ];
     }
+    // Stage Size Filters
     if (!stageSizeLower && stageSizeHigher) {
       query.$expr = {
         $and: [
@@ -111,6 +118,24 @@ const GetAll = (req, res) => {
             ],
           },
         ],
+      };
+    }
+    if (stageLengthLower && stageLengthHigher) {
+      query["productInfo.measurements.length"] = {
+        $gte: parseInt(stageLengthLower),
+        $lte: parseInt(stageLengthHigher),
+      };
+    }
+    if (stageWidthLower && stageWidthHigher) {
+      query["productInfo.measurements.width"] = {
+        $gte: parseInt(stageWidthLower),
+        $lte: parseInt(stageWidthHigher),
+      };
+    }
+    if (stageHeightLower && stageHeightHigher) {
+      query["productInfo.measurements.height"] = {
+        $gte: parseInt(stageHeightLower),
+        $lte: parseInt(stageHeightHigher),
       };
     }
     if (occassion) {
