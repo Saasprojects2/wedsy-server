@@ -1,6 +1,15 @@
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
+// Lead/Enquiry Status:
+// Fresh, New, Hot, Potential, Cold, Lost
+// Fresh Lead: When its a new entry. (with 24 Hours)
+// New Lead: When the lead has just come (within a week)
+// Hot Lead: When event date is within 8 weeks.
+// Potential Lead: When event date is between 8 weeks to 20 weeks.
+// Cold Lead: Event is beyond 20 Weeks or not yet decided.
+// Lost Lead: Waste Lead.
+
 const EnquirySchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
