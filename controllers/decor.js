@@ -65,6 +65,10 @@ const GetAll = (req, res) => {
     priceLower,
     priceHigher,
     checkId,
+    label,
+    spotlight,
+    searchFor,
+    decorId,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -77,9 +81,29 @@ const GetAll = (req, res) => {
           error,
         });
       });
+  }
+  if (searchFor === "decorId") {
+    Decor.find({ "productInfo.id": { $regex: new RegExp(decorId, "i") } })
+      .limit(limit)
+      .exec()
+      .then((result) => {
+        res.send({ list: result });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
   } else {
     const query = {};
     const sortQuery = {};
+    if (label) {
+      query.label = label;
+    }
+    if (spotlight === "true") {
+      query.spotlight = true;
+    }
     if (category) {
       query.category = category;
     }
@@ -88,7 +112,7 @@ const GetAll = (req, res) => {
         { name: { $regex: new RegExp(search, "i") } },
         // { description: { $regex: new RegExp(search, "i") } },
         { tags: { $regex: new RegExp(search, "i") } },
-        { "productInfo.includes": { $regex: new RegExp(search, "i") } },
+        { "productInfo.included": { $regex: new RegExp(search, "i") } },
       ];
     }
     // Stage Size Filters
@@ -224,41 +248,15 @@ const Get = (req, res) => {
 
 const Update = (req, res) => {
   const { _id } = req.params;
-  const {
-    category,
-    label,
-    name,
-    unit,
-    tags,
-    image,
-    thumbnail,
-    video,
-    description,
-    pdf,
-    productVariation,
-    productInfo,
-    seoTags,
-  } = req.body;
-  if (!name || !category) {
-    res.status(400).send({ message: "Incomplete Data" });
-  } else {
+  const { addTo, removeFrom } = req.query;
+  if (addTo === "spotlight") {
+    const { spotlightColor } = req.body;
     Decor.findByIdAndUpdate(
       { _id },
       {
         $set: {
-          category,
-          label,
-          name,
-          unit,
-          tags,
-          image,
-          thumbnail,
-          video,
-          description,
-          pdf,
-          productVariation,
-          productInfo,
-          seoTags,
+          spotlight: true,
+          spotlightColor,
         },
       }
     )
@@ -272,6 +270,113 @@ const Update = (req, res) => {
       .catch((error) => {
         res.status(400).send({ message: "error", error });
       });
+  } else if (removeFrom === "spotlight") {
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          spotlight: false,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (addTo === "bestSeller" || addTo === "popular") {
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          label: addTo,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (removeFrom === "bestSeller" || removeFrom === "popular") {
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          label: "",
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else {
+    const {
+      category,
+      label,
+      name,
+      unit,
+      tags,
+      image,
+      thumbnail,
+      video,
+      description,
+      pdf,
+      productVariation,
+      productInfo,
+      seoTags,
+    } = req.body;
+    if (!name || !category) {
+      res.status(400).send({ message: "Incomplete Data" });
+    } else {
+      Decor.findByIdAndUpdate(
+        { _id },
+        {
+          $set: {
+            category,
+            label,
+            name,
+            unit,
+            tags,
+            image,
+            thumbnail,
+            video,
+            description,
+            pdf,
+            productVariation,
+            productInfo,
+            seoTags,
+          },
+        }
+      )
+        .then((result) => {
+          if (result) {
+            res.status(200).send({ message: "success" });
+          } else {
+            res.status(404).send({ message: "not found" });
+          }
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    }
   }
 };
 
