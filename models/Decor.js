@@ -20,6 +20,8 @@ const DecorSchema = new mongoose.Schema(
       // enum: ["BestSeller", "Popular", ""],
       default: "",
     },
+    spotlight: { type: Boolean, default: false },
+    spotlightColor: { type: String, default: "" },
     name: { type: String, required: true },
     unit: { type: String, required: true },
     tags: { type: [String], required: true, default: [] },
