@@ -17,6 +17,12 @@ const UserSchema = new mongoose.Schema(
     },
     wishlist: {
       decor: { type: [ObjectId], ref: "Decor", required: true, default: [] },
+      decorPackage: {
+        type: [ObjectId],
+        ref: "DecorPackage",
+        required: true,
+        default: [],
+      },
     },
   },
   { timestamps: true }
