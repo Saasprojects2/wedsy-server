@@ -48,6 +48,49 @@ const EventSchema = new mongoose.Schema(
             ],
             default: [],
           },
+          packages: {
+            type: [
+              {
+                package: { type: ObjectId, ref: "DecorPackage" },
+                price: { type: Number, default: 0 },
+                variant: {
+                  type: String,
+                  required: true,
+                  enum: ["artificialFlowers", "naturalFlowers", "mixedFlowers"],
+                },
+                decorItems: {
+                  type: [
+                    {
+                      quantity: { type: Number, default: 1 },
+                      unit: { type: String, default: "" },
+                      decor: { type: ObjectId, ref: "Decor" },
+                      platform: { type: Boolean, default: false },
+                      flooring: { type: String, default: "" },
+                      dimensions: {
+                        length: { type: Number, default: 0 },
+                        breadth: { type: Number, default: 0 },
+                        height: { type: Number, default: 0 },
+                      },
+                      category: {
+                        type: String,
+                        required: true,
+                        enum: [
+                          "Stage",
+                          "Pathway",
+                          "Entrance",
+                          "Photobooth",
+                          "Mandap",
+                          "Nameboard",
+                        ],
+                      },
+                    },
+                  ],
+                  default: [],
+                },
+              },
+            ],
+            default: [],
+          },
           status: {
             finalized: { type: Boolean, default: false },
             approved: { type: Boolean, default: false },
