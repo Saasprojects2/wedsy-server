@@ -12,6 +12,16 @@ router.post("/:_id/eventDay", CheckLogin, event.AddEventDay);
 router.put("/:_id/eventDay/:eventDay", CheckLogin, event.UpdateEventDay);
 router.post("/:_id/decor/:dayId", CheckLogin, event.AddDecorInEventDay);
 router.delete("/:_id/decor/:dayId", CheckLogin, event.RemoveDecorInEventDay);
+router.post(
+  "/:_id/decor-package/:dayId",
+  CheckLogin,
+  event.AddDecorPackageInEventDay
+);
+router.delete(
+  "/:_id/decor-package/:dayId",
+  CheckLogin,
+  event.RemoveDecorPackageInEventDay
+);
 router.post("/:_id/finalize/:dayId", CheckLogin, event.FinalizeEventDay);
 
 module.exports = router;

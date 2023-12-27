@@ -18,9 +18,20 @@ const CreateEventPayment = (req, res) => {
           const { finalized, approved, paymentDone } = eventDay.status;
           if (finalized && approved && !paymentDone) {
             const decorItems = eventDay.decorItems;
-            let amount = decorItems.reduce((accumulator, currentObject) => {
-              return accumulator + currentObject.price;
-            }, 0);
+            const packages = eventDay.packages;
+            let decorItemsAmount = decorItems.reduce(
+              (accumulator, currentObject) => {
+                return accumulator + currentObject.price;
+              },
+              0
+            );
+            let packagesAmount = packages.reduce(
+              (accumulator, currentObject) => {
+                return accumulator + currentObject.price;
+              },
+              0
+            );
+            let amount = decorItemsAmount + packagesAmount;
             amount *= 100;
             if (amount > 0) {
               Payment.findOne({
@@ -72,7 +83,7 @@ const CreateEventPayment = (req, res) => {
               res.status(400).send({ message: "No items to pay" });
             }
           } else {
-            res.status(400).send({ message: "Event note ready for payment." });
+            res.status(400).send({ message: "Event not ready for payment." });
           }
         } else {
           res.status(404).send({ message: "Event not found" });

@@ -113,6 +113,7 @@ const GetAll = (req, res) => {
         // { description: { $regex: new RegExp(search, "i") } },
         { tags: { $regex: new RegExp(search, "i") } },
         { "productInfo.included": { $regex: new RegExp(search, "i") } },
+        { "productInfo.id": { $regex: new RegExp(search, "i") } },
       ];
     }
     // Stage Size Filters

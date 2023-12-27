@@ -180,6 +180,69 @@ const RemoveDecorInEventDay = (req, res) => {
   }
 };
 
+const AddDecorPackageInEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  const { package, price, variant, decorItems } = req.body;
+  if (!package || !variant || !price) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $addToSet: {
+          "eventDays.$.packages": {
+            package,
+            price,
+            variant,
+            decorItems,
+          },
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const RemoveDecorPackageInEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  const { package } = req.body;
+  if (!package) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $pull: {
+          "eventDays.$.packages": {
+            package,
+          },
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const GetAll = (req, res) => {
   const { user_id } = req.auth;
   Event.find({ user: user_id })
@@ -247,6 +310,8 @@ module.exports = {
   AddEventDay,
   AddDecorInEventDay,
   RemoveDecorInEventDay,
+  AddDecorPackageInEventDay,
+  RemoveDecorPackageInEventDay,
   FinalizeEventDay,
   UpdateEventDay,
 };

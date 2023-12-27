@@ -72,6 +72,25 @@ const AddToWishList = (req, res) => {
           error,
         });
       });
+  } else if (wishlist === "decorPackage") {
+    User.findByIdAndUpdate(
+      { _id: user_id },
+      { $addToSet: { "wishlist.decorPackage": _id } }
+    )
+      .exec()
+      .then((result) => {
+        if (result) {
+          res.send({ message: "success" });
+        } else {
+          res.status(400).send();
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
   }
 };
 
@@ -85,6 +104,25 @@ const RemoveFromWishList = (req, res) => {
     User.findByIdAndUpdate(
       { _id: user_id },
       { $pull: { "wishlist.decor": _id } }
+    )
+      .exec()
+      .then((result) => {
+        if (result) {
+          res.send({ message: "success" });
+        } else {
+          res.status(400).send();
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  } else if (wishlist === "decorPackage") {
+    User.findByIdAndUpdate(
+      { _id: user_id },
+      { $pull: { "wishlist.decorPackage": _id } }
     )
       .exec()
       .then((result) => {
@@ -126,6 +164,19 @@ const GetWishList = (req, res) => {
           error,
         });
       });
+  } else if (wishlist === "decorPackage") {
+    User.findById({ _id: user_id }, "wishlist")
+      .populate("wishlist.decorPackage")
+      .exec()
+      .then((result) => {
+        res.send(result.wishlist.decorPackage);
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
   }
 };
 
@@ -141,6 +192,12 @@ const IsAddedToWishlist = (req, res) => {
         const { wishlist } = result;
         if (product === "decor") {
           if (wishlist.decor.includes(_id)) {
+            res.send({ message: "success", wishlist: true });
+          } else {
+            res.send({ message: "success", wishlist: false });
+          }
+        } else if (product === "decorPackage") {
+          if (wishlist.decorPackage.includes(_id)) {
             res.send({ message: "success", wishlist: true });
           } else {
             res.send({ message: "success", wishlist: false });
