@@ -69,6 +69,7 @@ const GetAll = (req, res) => {
     spotlight,
     searchFor,
     decorId,
+    random,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -88,6 +89,18 @@ const GetAll = (req, res) => {
       .exec()
       .then((result) => {
         res.send({ list: result });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  }
+  if (spotlight === "true" && random === "true") {
+    Decor.aggregate([{ $match: { spotlight: true } }, { $sample: { size: 1 } }])
+      .then((result) => {
+        res.send({ decor: result[0] });
       })
       .catch((error) => {
         res.status(400).send({
