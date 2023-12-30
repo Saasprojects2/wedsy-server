@@ -58,6 +58,10 @@ AWS_S3_REGION=
 # Razporpay
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
+
+# FAST2SMS
+FAST2SMS_API_URL=
+FAST2SMS_API_KEY=
 ```
 
 Make sure to replace the placeholder values with your actual configuration.
