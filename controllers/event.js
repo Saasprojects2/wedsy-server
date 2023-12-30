@@ -287,7 +287,9 @@ const Get = (req, res) => {
   const { populate } = req.query;
   let query = Event.findById({ _id, user: user_id });
   if (populate === "true") {
-    query = query.populate("eventDays.decorItems.decor");
+    query = query.populate(
+      "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
+    );
   }
   query
     .then((result) => {

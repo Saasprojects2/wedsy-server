@@ -70,6 +70,7 @@ const GetAll = (req, res) => {
     searchFor,
     decorId,
     random,
+    similarDecorFor,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -108,6 +109,57 @@ const GetAll = (req, res) => {
           error,
         });
       });
+  } else if (similarDecorFor) {
+    Decor.aggregate([
+      {
+        $match: {
+          _id: { $ne: similarDecorFor }, // Exclude the given product
+        },
+      },
+      // {
+      //   $project: {
+      //     _id: 1,
+      //     category: 1,
+      //     tags: 1,
+      //     occassion: "$productVariation.occassion",
+      //     flowers: "$productVariation.flowers",
+      //   },
+      // },
+      // {
+      //   $group: {
+      //     _id: null,
+      //     products: {
+      //       $push: {
+      //         _id: "$_id",
+      //         category: "$category",
+      //         tags: "$tags",
+      //         occassion: "$occassion",
+      //         flowers: "$flowers",
+      //       },
+      //     },
+      //   },
+      // },
+      // { $unwind: "$products" }, // Unwind to flatten the array
+      // { $replaceRoot: { newRoot: "$products" } },
+      // { $limit: 10 },
+      { $sample: { size: 10 } },
+      {
+        $project: {
+          _id: 1,
+          category: 1,
+          tags: 1,
+          "productVariation.occassion": 1,
+          "productVariation.flowers": 1,
+        },
+      },
+      { $limit: 10 },
+    ])
+      .then((result) => {
+        Decor.find({ _id: { $in: result.map((item) => item._id) } })
+          .then((result) => res.send({ list: result }))
+          .catch((error) => res.status(400).send({ message: "error", error }));
+      })
+      .catch((error) => res.status(400).send({ message: "error", error }));
   } else {
     const query = {};
     const sortQuery = {};
