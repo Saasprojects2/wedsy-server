@@ -4,6 +4,7 @@ const { VerifyOTP } = require("../utils/otp");
 const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
 const Event = require("../models/Event");
+const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
   const { name, phone, verified, source, Otp, ReferenceId } = req.body;
@@ -30,6 +31,11 @@ const CreateNew = (req, res) => {
                 })
                   .save()
                   .then((result) => {
+                    SendUpdate({
+                      channels: ["SMS", "Whatsapp"],
+                      message: "New Lead",
+                      parameters: { name, phone },
+                    });
                     res.send({
                       message: "Enquiry Added Successfully",
                       token,
@@ -59,6 +65,11 @@ const CreateNew = (req, res) => {
                     })
                       .save()
                       .then((result) => {
+                        SendUpdate({
+                          channels: ["SMS", "Whatsapp"],
+                          message: "New Lead",
+                          parameters: { name, phone },
+                        });
                         res.send({
                           message: "Enquiry Added Successfully",
                           token,
@@ -93,6 +104,11 @@ const CreateNew = (req, res) => {
       .save()
       .then((result) => {
         res.status(201).send();
+        SendUpdate({
+          channels: ["SMS", "Whatsapp"],
+          message: "New Lead",
+          parameters: { name, phone },
+        });
       })
       .catch((error) => {
         res.status(400).send({ message: "error", error });

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
 const Admin = require("../models/Admin");
 const { CheckHash, CreateHash } = require("../utils/password");
+const { SendUpdate } = require("../utils/update");
 
 const Login = (req, res) => {
   const { name, phone, Otp, ReferenceId } = req.body;
@@ -39,6 +40,11 @@ const Login = (req, res) => {
                       process.env.JWT_SECRET,
                       jwtConfig
                     );
+                    SendUpdate({
+                      channels: ["SMS"],
+                      message: "New User",
+                      parameters: { name, phone },
+                    });
                     res.send({
                       message: "Login Successful",
                       token,
