@@ -41,7 +41,7 @@ const Login = (req, res) => {
                       jwtConfig
                     );
                     SendUpdate({
-                      channels: ["SMS"],
+                      channels: ["SMS", "Whatsapp"],
                       message: "New User",
                       parameters: { name, phone },
                     });
