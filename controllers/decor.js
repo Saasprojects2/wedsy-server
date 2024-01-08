@@ -71,6 +71,7 @@ const GetAll = (req, res) => {
     decorId,
     random,
     similarDecorFor,
+    repeat,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -265,26 +266,48 @@ const GetAll = (req, res) => {
 
     Decor.countDocuments(query)
       .then((total) => {
-        const totalPages = Math.ceil(total / limit);
-        const validPage = page % totalPages;
-        const skip =
-          validPage === 0 || validPage === null || validPage === undefined
-            ? 0
-            : (validPage - 1) * limit;
-        Decor.find(query)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limit)
-          .exec()
-          .then((result) => {
-            res.send({ list: result, totalPages, page, limit });
-          })
-          .catch((error) => {
-            res.status(400).send({
-              message: "error",
-              error,
+        if (repeat === "false") {
+          const totalPages = Math.ceil(total / limit);
+          const skip =
+            page === 0 || page === null || page === undefined
+              ? 0
+              : (page - 1) * limit;
+          Decor.find(query)
+            .sort(sortQuery)
+            .skip(skip)
+            .limit(limit)
+            .exec()
+            .then((result) => {
+              res.send({ list: result, totalPages, page, limit });
+            })
+            .catch((error) => {
+              res.status(400).send({
+                message: "error",
+                error,
+              });
             });
-          });
+        } else {
+          const totalPages = Math.ceil(total / limit);
+          const validPage = page % totalPages;
+          const skip =
+            validPage === 0 || validPage === null || validPage === undefined
+              ? 0
+              : (validPage - 1) * limit;
+          Decor.find(query)
+            .sort(sortQuery)
+            .skip(skip)
+            .limit(limit)
+            .exec()
+            .then((result) => {
+              res.send({ list: result, totalPages, page, limit });
+            })
+            .catch((error) => {
+              res.status(400).send({
+                message: "error",
+                error,
+              });
+            });
+        }
       })
       .catch((error) => {
         res.status(400).send({
