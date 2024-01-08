@@ -83,8 +83,7 @@ const GetAll = (req, res) => {
           error,
         });
       });
-  }
-  if (searchFor === "decorId") {
+  } else if (searchFor === "decorId") {
     Decor.find({ "productInfo.id": { $regex: new RegExp(decorId, "i") } })
       .limit(limit)
       .exec()
@@ -97,8 +96,7 @@ const GetAll = (req, res) => {
           error,
         });
       });
-  }
-  if (spotlight === "true" && random === "true") {
+  } else if (spotlight === "true" && random === "true") {
     Decor.aggregate([{ $match: { spotlight: true } }, { $sample: { size: 1 } }])
       .then((result) => {
         res.send({ decor: result[0] });
