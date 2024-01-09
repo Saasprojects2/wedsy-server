@@ -129,6 +129,7 @@ const GetAll = (req, res) => {
       const totalPages = Math.ceil(total / limit);
       const skip = (page - 1) * limit;
       Enquiry.find(query)
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec()
