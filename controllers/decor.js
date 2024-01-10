@@ -228,11 +228,13 @@ const GetAll = (req, res) => {
       };
     }
     if (occassion) {
-      query["productVariation.occassion"] = { $in: occassion.split("|") };
+      query["productVariation.occassion"] = {
+        $in: occassion.split("|").map((i) => new RegExp(i, "i")),
+      };
     }
     if (color) {
       query["productVariation.colors"] = {
-        $in: color.split("|").map((i) => i.toLowerCase()),
+        $in: color.split("|").map((i) => new RegExp(i, "i")),
       };
     }
     if (style && style !== "Both") {
@@ -266,9 +268,11 @@ const GetAll = (req, res) => {
 
     Decor.countDocuments(query)
       .then((total) => {
+        const totalPages = Math.ceil(total / limit);
+        const validPage = page % totalPages;
+        let skip = 0;
         if (repeat === "false") {
-          const totalPages = Math.ceil(total / limit);
-          const skip =
+          skip =
             page === 0 || page === null || page === undefined
               ? 0
               : (page - 1) * limit;
@@ -287,9 +291,7 @@ const GetAll = (req, res) => {
               });
             });
         } else {
-          const totalPages = Math.ceil(total / limit);
-          const validPage = page % totalPages;
-          const skip =
+          skip =
             validPage === 0 || validPage === null || validPage === undefined
               ? 0
               : (validPage - 1) * limit;
