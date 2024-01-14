@@ -6,6 +6,8 @@ const { CheckLogin, CheckAdminLogin } = require("../middlewares/auth");
 
 router.post("/", enquiry.CreateNew);
 router.get("/", CheckAdminLogin, enquiry.GetAll);
+router.put("/", CheckAdminLogin, enquiry.Update);
+router.delete("/", CheckAdminLogin, enquiry.Delete);
 router.get("/:_id", CheckAdminLogin, enquiry.Get);
 router.post("/:_id/user", CheckAdminLogin, enquiry.CreateUser);
 router.post("/:_id/conversations", CheckAdminLogin, enquiry.AddConversation);

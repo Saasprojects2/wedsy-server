@@ -119,35 +119,319 @@ const CreateNew = (req, res) => {
 const GetAll = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  const { source } = req.query;
+  const { source, date, search, sort, status } = req.query;
   const query = {};
+  const sortQuery = {};
   if (source) {
     query.source = source;
   }
-  Enquiry.countDocuments(query)
-    .then((total) => {
-      const totalPages = Math.ceil(total / limit);
-      const skip = (page - 1) * limit;
-      Enquiry.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .exec()
-        .then((result) => {
-          res.send({ list: result, totalPages, page, limit });
-        })
-        .catch((error) => {
-          res.status(400).send({
-            message: "error",
-            error,
+  if (date) {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+    query.createdAt = {
+      $gte: startDate,
+      $lt: endDate,
+    };
+  }
+  if (search) {
+    query.$or = [
+      { name: { $regex: new RegExp(search, "i") } },
+      { email: { $regex: new RegExp(search, "i") } },
+      { phone: { $regex: new RegExp(search, "i") } },
+    ];
+  }
+  if (sort) {
+    if (sort === "Date: Oldest") {
+      sortQuery.createdAt = 1;
+    } else if (sort === "Date: Newest") {
+      sortQuery.createdAt = -1;
+    }
+  } else {
+    sortQuery.createdAt = -1;
+  }
+  if (status) {
+    // Fresh, New, Hot, Potential, Cold, Lost, Interested, Verified, Not Verified
+    if (status === "Interested") {
+      query.isInterested = true;
+    } else if (status === "Lost") {
+      query.isLost = true;
+    } else if (status === "Verified") {
+      query.verified = true;
+    } else if (status === "NotVerified") {
+      query.verified = false;
+    } else if (status === "Fresh" || status === "New") {
+      let tempDate = new Date();
+      tempDate.setHours(0, 0, 0, 0);
+      if (status === "Fresh") {
+        tempDate.setDate(tempDate.getDate() - 1);
+      } else if (status === "New") {
+        tempDate.setDate(tempDate.getDate() - 7);
+      }
+      query.createdAt = {
+        $gte: tempDate,
+      };
+    }
+  }
+  if (!(status && ["Hot", "Potential", "Cold"].includes(status))) {
+    Enquiry.countDocuments(query)
+      .then((total) => {
+        const totalPages = Math.ceil(total / limit);
+        const skip = (page - 1) * limit;
+        // const pipeline = [
+        //   {
+        //     $lookup: {
+        //       from: "users",
+        //       localField: "phone",
+        //       foreignField: "phone",
+        //       as: "user",
+        //     },
+        //   },
+        //   {
+        //     $unwind: {
+        //       path: "$user",
+        //       preserveNullAndEmptyArrays: true, // Include documents without matching users
+        //     },
+        //   },
+        //   {
+        //     $lookup: {
+        //       from: "events",
+        //       localField: "user._id",
+        //       foreignField: "user",
+        //       as: "events",
+        //     },
+        //   },
+        //   {
+        //     $unwind: {
+        //       path: "$events",
+        //       preserveNullAndEmptyArrays: true, // Include documents without matching events
+        //     },
+        //   },
+        //   { $sort: sortQuery },
+        //   {
+        //     $group: {
+        //       _id: "$_id", // Group by the Enquiry document ID
+        //       user: { $first: "$user" }, // Take the first user (assuming there's at most one)
+        //       event: { $first: "$events" }, // Take the first event for the user
+        //       enquiryFields: { $first: "$$ROOT" },
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       _id: "$enquiryFields._id",
+        //       name: "$enquiryFields.name",
+        //       phone: "$enquiryFields.phone",
+        //       email: "$enquiryFields.email",
+        //       verified: "$enquiryFields.verified",
+        //       isInterested: "$enquiryFields.isInterested",
+        //       isLost: "$enquiryFields.isLost",
+        //       source: "$enquiryFields.source",
+        //       updates: "$enquiryFields.updates",
+        //       user: "$user",
+        //       event: "$event",
+        //       createdAt: "$enquiryFields.createdAt",
+        //       updatedAt: "$enquiryFields.updatedAt",
+        //     },
+        //   },
+        //   {
+        //     $match: {
+        //       $or: [
+        //         { "user._id": { $exists: false } }, // Include entries without users
+        //         { "events._id": { $exists: false } }, // Include entries without events
+        //         { ...query }, // Include entries that match the query
+        //       ],
+        //     },
+        //   },
+        //   {
+        //     $facet: {
+        //       metadata: [{ $count: "total" }],
+        //       result: [{ $skip: skip }, { $limit: limit }],
+        //     },
+        //   },
+        // ];
+        Enquiry
+          // .aggregate([
+          //   ...pipeline,
+          //   // { $skip: skip },
+          //   // { $limit: limit },
+          //   // { $sort: sortQuery },
+          // ])
+          .find(query)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limit)
+          .exec()
+          .then((result) => {
+            // res.send({ list: result[0].result, totalPages, page, limit });
+            res.send({ list: result, totalPages, page, limit });
+          })
+          .catch((error) => {
+            res.status(400).send({
+              message: "error",
+              error,
+            });
           });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
         });
+      });
+  } else {
+    // Hot, Potential, Cold
+    const tempCurrentDate = new Date();
+    const tempStartDate = new Date(tempCurrentDate);
+    const tempEndDate = new Date(tempCurrentDate);
+    if (status === "Hot") {
+      tempStartDate.setDate(tempCurrentDate.getDate() + 0 * 7); // 0 weeks
+      tempEndDate.setDate(tempCurrentDate.getDate() + 8 * 7); // 8 weeks
+    } else if (status === "Potential") {
+      tempStartDate.setDate(tempCurrentDate.getDate() + 8 * 7); // 8 weeks
+      tempEndDate.setDate(tempCurrentDate.getDate() + 20 * 7); // 20 weeks
+    } else if (status === "Cold") {
+      // tempStartDate.setDate(tempCurrentDate.getDate() + 8 * 7); // 8 weeks
+      tempStartDate.setDate(tempCurrentDate.getDate() + 20 * 7); // 20 weeks
+    }
+    tempStartDate.setHours(0, 0, 0, 0);
+    tempEndDate.setHours(23, 59, 59, 999);
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "users",
+          localField: "phone",
+          foreignField: "phone",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $lookup: {
+          from: "events",
+          localField: "user._id",
+          foreignField: "user",
+          as: "events",
+        },
+      },
+      {
+        $unwind: "$events",
+      },
+      {
+        $match: {
+          ...query,
+          $and:
+            status === "Cold"
+              ? [
+                  {
+                    "events.eventDays.date": {
+                      $gte: tempStartDate.toISOString().slice(0, 10), // Convert to ISO string and get only the date part
+                    },
+                  },
+                  // {
+                  //   "events.eventDays.date": {
+                  //     $lt: tempEndDate.toISOString().slice(0, 10), // Convert to ISO string and get only the date part
+                  //   },
+                  // },
+                ]
+              : [
+                  {
+                    "events.eventDays.date": {
+                      $gte: tempStartDate.toISOString().slice(0, 10), // Convert to ISO string and get only the date part
+                    },
+                  },
+                  {
+                    "events.eventDays.date": {
+                      $lt: tempEndDate.toISOString().slice(0, 10), // Convert to ISO string and get only the date part
+                    },
+                  },
+                ],
+        },
+      },
+    ];
+
+    Enquiry.aggregate(pipeline)
+      .then((result) => {
+        const total = result.length; // Count the matched documents
+        const totalPages = Math.ceil(total / limit);
+        const skip = (page - 1) * limit;
+
+        // Apply pagination and sorting to the results
+        Enquiry.aggregate([
+          ...pipeline,
+          { $skip: skip },
+          { $limit: limit },
+          { $sort: sortQuery },
+        ])
+          .then((result) => {
+            res.send({ list: result, totalPages, page, limit });
+          })
+          .catch((error) => {
+            res.status(400).send({
+              message: "error",
+              error,
+            });
+          });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  }
+};
+
+const Update = (req, res) => {
+  const { leadIds, action } = req.body;
+  if (action === "MarkInterested") {
+    Enquiry.updateMany(
+      { _id: { $in: leadIds } },
+      { isInterested: true, isLost: false }
+    )
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send({ message: "success" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (action === "MarkLost") {
+    Enquiry.updateMany(
+      { _id: { $in: leadIds } },
+      { isInterested: false, isLost: true }
+    )
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send({ message: "success" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const Delete = (req, res) => {
+  const { leadIds } = req.body;
+  Enquiry.deleteMany({ _id: { $in: leadIds } })
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ message: "success" });
+      }
     })
     .catch((error) => {
-      res.status(400).send({
-        message: "error",
-        error,
-      });
+      res.status(400).send({ message: "error", error });
     });
 };
 
@@ -270,6 +554,8 @@ module.exports = {
   CreateNew,
   GetAll,
   Get,
+  Update,
+  Delete,
   CreateUser,
   AddConversation,
   UpdateNotes,
