@@ -4,6 +4,7 @@ const { VerifyOTP } = require("../utils/otp");
 const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
 const Event = require("../models/Event");
+const Payment = require("../models/Payment");
 const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
@@ -449,12 +450,31 @@ const Get = (req, res) => {
             } else {
               Event.find({ user: user._id })
                 .then((events) => {
-                  res.send({
-                    ...result.toObject(),
-                    userCreated: true,
-                    user,
-                    events,
-                  });
+                  Payment.find({ user: user._id })
+                    .populate("event")
+                    .then((payments) => {
+                      const { totalAmount, amountPaid, amountDue } =
+                        payments.reduce(
+                          (accumulator, payment) => {
+                            accumulator.totalAmount += payment.amount;
+                            accumulator.amountPaid += payment.amountPaid;
+                            accumulator.amountDue += payment.amountDue;
+                            return accumulator;
+                          },
+                          { totalAmount: 0, amountPaid: 0, amountDue: 0 }
+                        );
+                      res.send({
+                        ...result.toObject(),
+                        userCreated: true,
+                        user,
+                        events,
+                        payments,
+                        paymentStats: { totalAmount, amountPaid, amountDue },
+                      });
+                    })
+                    .catch((error) => {
+                      res.status(400).send({ message: "error", error });
+                    });
                 })
                 .catch((error) => {
                   res.status(400).send({ message: "error", error });
