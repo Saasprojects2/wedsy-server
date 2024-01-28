@@ -73,4 +73,17 @@ const GetPaymentStatus = ({ order_id, response }) => {
   });
 };
 
-module.exports = { CreatePayment, GetPaymentStatus };
+const GetPaymentTransactions = ({ order_id }) => {
+  return new Promise((resolve, reject) => {
+    instance.orders.fetchPayments(order_id, function (err, transactions) {
+      if (err) {
+        reject({ message: "error", err });
+      } else {
+        console.log(transactions);
+        resolve(transactions.items);
+      }
+    });
+  });
+};
+
+module.exports = { CreatePayment, GetPaymentStatus, GetPaymentTransactions };
