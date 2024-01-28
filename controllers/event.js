@@ -243,19 +243,48 @@ const RemoveDecorPackageInEventDay = (req, res) => {
   }
 };
 
-const GetAll = (req, res) => {
-  const { user_id } = req.auth;
-  Event.find({ user: user_id })
-    .exec()
-    .then((result) => {
-      res.send(result);
-    })
-    .catch((error) => {
-      res.status(400).send({
-        message: "error",
-        error,
+const GetAll = async (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  if (isAdmin) {
+    if (req.query.stats === "upcoming") {
+      //
+    } else if (req.query.stats === "pending_approval") {
+      // Aggregate to count finalized event days
+      const result = await Event.aggregate([
+        // { $unwind: "$eventdays" }, // Split the array into separate documents
+        // // { $match: { "status.finalized": true } }, // Filter documents with status "finalized"
+        // { $group: { _id: null, count: { $sum: 1 } } }, // Count the matching documents
+        {
+          $project: {
+            count: {
+              $size: {
+                $filter: {
+                  input: "$eventDays",
+                  cond: { $eq: ["$$this.status.finalized", true] },
+                },
+              },
+            },
+          },
+        },
+        { $group: { _id: null, count: { $sum: "$count" } } },
+      ]);
+      // Extract the count from the result
+      const count = result.length > 0 ? result[0].count : 0;
+      res.send({ pending_approval: count });
+    }
+  } else {
+    Event.find({ user: user_id })
+      .exec()
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
       });
-    });
+  }
 };
 
 const FinalizeEventDay = (req, res) => {
