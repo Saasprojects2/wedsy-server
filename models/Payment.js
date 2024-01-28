@@ -9,6 +9,12 @@ const PaymentSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
     amountPaid: { type: Number, required: true },
     amountDue: { type: Number, required: true },
+    paymentMethod: {
+      type: String,
+      default: "default",
+      enum: ["default", "razporpay", "cash"],
+      required: true,
+    },
     razporPayId: { type: String, default: "" },
     response: { type: [Object], default: [] },
     status: {
