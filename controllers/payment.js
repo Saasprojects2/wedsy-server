@@ -1,10 +1,14 @@
 const Event = require("../models/Event");
 const Payment = require("../models/Payment");
-const { CreatePayment, GetPaymentStatus } = require("../utils/payment");
+const {
+  CreatePayment,
+  GetPaymentStatus,
+  GetPaymentTransactions,
+} = require("../utils/payment");
 
 const CreateEventPayment = (req, res) => {
   const { user_id } = req.auth;
-  const { eventId, eventDayId } = req.body;
+  const { eventId, eventDayId, paymentMethod } = req.body;
   Event.findOne({
     _id: eventId,
     user: user_id,
@@ -55,6 +59,7 @@ const CreateEventPayment = (req, res) => {
                       amount,
                       amountPaid: 0,
                       amountDue: amount,
+                      paymentMethod: paymentMethod || "default",
                     })
                       .save()
                       .then((result) => {
@@ -213,4 +218,25 @@ const GetAllPayments = (req, res) => {
   }
 };
 
-module.exports = { CreateEventPayment, UpdatePayment, GetAllPayments };
+const GetAllTransactions = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { order_id } = req.params;
+  if (isAdmin) {
+    GetPaymentTransactions({ order_id })
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else {
+    res.send(401);
+  }
+};
+
+module.exports = {
+  CreateEventPayment,
+  UpdatePayment,
+  GetAllPayments,
+  GetAllTransactions,
+};
