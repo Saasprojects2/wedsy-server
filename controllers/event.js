@@ -102,6 +102,69 @@ const UpdateEventDay = (req, res) => {
   }
 };
 
+const UpdateNotes = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, eventDay } = req.params;
+  const { user, decor_id, package_id, admin_notes, user_notes } = req.body;
+  if (!decor_id && !package_id) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    if (decor_id) {
+      Event.updateOne(
+        {
+          _id,
+          user: isAdmin ? user : user_id,
+          "eventDays._id": eventDay,
+        },
+        {
+          $set: isAdmin
+            ? {
+                "eventDays.$[].decorItems.$[x].admin_notes": admin_notes,
+              }
+            : {
+                "eventDays.$[].decorItems.$[x].user_notes": user_notes,
+              },
+        },
+        { arrayFilters: [{ "x.decor": decor_id }] }
+      )
+        .then((result) => {
+          if (result) {
+            res.status(200).send({ message: "success" });
+          }
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    } else if (package_id) {
+      Event.updateOne(
+        {
+          _id,
+          user: isAdmin ? user : user_id,
+          "eventDays._id": eventDay,
+        },
+        {
+          $set: isAdmin
+            ? {
+                "eventDays.$[].packages.$[x].admin_notes": admin_notes,
+              }
+            : {
+                "eventDays.$[].packages.$[x].user_notes": user_notes,
+              },
+        },
+        { arrayFilters: [{ "x.package": package_id }] }
+      )
+        .then((result) => {
+          if (result) {
+            res.status(200).send({ message: "success" });
+          }
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    }
+  }
+};
+
 const AddDecorInEventDay = (req, res) => {
   const { user_id } = req.auth;
   const { _id, dayId } = req.params;
@@ -345,4 +408,5 @@ module.exports = {
   RemoveDecorPackageInEventDay,
   FinalizeEventDay,
   UpdateEventDay,
+  UpdateNotes,
 };
