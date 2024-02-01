@@ -35,7 +35,8 @@ const CreateEventPayment = (req, res) => {
               },
               0
             );
-            let amount = decorItemsAmount + packagesAmount;
+            let other_costs = eventDay.other_costs.total_other_costs || 0;
+            let amount = decorItemsAmount + packagesAmount + other_costs;
             amount *= 100;
             if (amount > 0) {
               Payment.findOne({
