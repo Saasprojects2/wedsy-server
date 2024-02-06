@@ -8,7 +8,8 @@ const Payment = require("../models/Payment");
 const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
-  const { name, phone, verified, source, Otp, ReferenceId } = req.body;
+  const { name, phone, verified, source, Otp, ReferenceId, additionalInfo } =
+    req.body;
   if (!name || !phone || !source || verified === undefined) {
     res.status(400).send({ message: "Incomplete Data" });
   } else if (verified && Otp && ReferenceId) {
@@ -29,6 +30,7 @@ const CreateNew = (req, res) => {
                   phone,
                   verified,
                   source,
+                  additionalInfo: additionalInfo || {},
                 })
                   .save()
                   .then((result) => {
@@ -63,6 +65,7 @@ const CreateNew = (req, res) => {
                       phone,
                       verified,
                       source,
+                      additionalInfo: additionalInfo || {},
                     })
                       .save()
                       .then((result) => {
@@ -101,6 +104,7 @@ const CreateNew = (req, res) => {
       phone,
       verified: false,
       source,
+      additionalInfo: additionalInfo || {},
     })
       .save()
       .then((result) => {
