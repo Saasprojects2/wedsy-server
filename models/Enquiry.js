@@ -27,6 +27,7 @@ const EnquirySchema = new mongoose.Schema(
       notes: { type: String, default: "" },
       callSchedule: { type: Date, default: "" },
     },
+    additionalInfo: { type: Object, default: {} },
   },
   { timestamps: true }
 );
