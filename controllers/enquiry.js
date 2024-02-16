@@ -108,12 +108,12 @@ const CreateNew = (req, res) => {
     })
       .save()
       .then((result) => {
-        res.status(201).send();
         SendUpdate({
           channels: ["SMS", "Whatsapp"],
           message: "New Lead",
           parameters: { name, phone },
         });
+        res.status(201).send();
       })
       .catch((error) => {
         res.status(400).send({ message: "error", error });
