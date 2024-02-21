@@ -5,7 +5,7 @@ const { CheckLogin } = require("../middlewares/auth");
 const payment = require("../controllers/payment");
 
 router.get("/", CheckLogin, payment.GetAllPayments);
-router.post("/", CheckLogin, payment.CreateEventPayment);
+router.post("/", CheckLogin, payment.CreateNewPayment);
 router.get("/:order_id/transactions", CheckLogin, payment.GetAllTransactions);
 router.put("/:order_id", CheckLogin, payment.UpdatePayment);
 
