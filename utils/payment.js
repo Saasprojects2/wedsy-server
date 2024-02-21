@@ -13,13 +13,13 @@ const CreatePayment = ({ _id }) => {
         if (!result) {
           reject({ message: "Not Found!" });
         } else {
-          const { amount, user, event, eventDay } = result;
+          const { amount, user, paymentFor, event } = result;
           const options = {
             amount,
             currency: "INR",
             receipt: _id,
-            notes: { user, event, eventDay },
-            partial_payment: true, // indicates whether the customer can make a partial payment.
+            notes: { user, paymentFor, event: event || "" },
+            partial_payment: false, // indicates whether the customer can make a partial payment.
           };
           instance.orders.create(options, function (err, order) {
             if (err) {
