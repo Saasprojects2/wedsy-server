@@ -23,19 +23,16 @@ const CreateNew = (req, res) => {
 };
 
 const Update = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
   const { name, community } = req.body;
   if (!name || !community) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
-    Event.findOneAndUpdate(
-      { _id, user: user_id },
-      {
-        name,
-        community,
-      }
-    )
+    Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
+      name,
+      community,
+    })
       .then((result) => {
         res.status(200).send({ message: "success" });
       })
@@ -46,27 +43,29 @@ const Update = (req, res) => {
 };
 
 const AddEventDay = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
   const { name, date, time, venue } = req.body;
   if (!name || !date || !time || !venue) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
-    Event.findOneAndUpdate(
-      { _id, user: user_id },
-      {
-        $addToSet: {
-          eventDays: {
-            name,
-            date,
-            time,
-            venue,
-            decorItems: [],
-            status: { finalized: false, approved: false, paymentDone: false },
+    Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
+      $addToSet: {
+        eventDays: {
+          name,
+          date,
+          time,
+          venue,
+          decorItems: [],
+          status: {
+            finalized: false,
+            approved: false,
+            paymentDone: false,
+            completed: false,
           },
         },
-      }
-    )
+      },
+    })
       .then((result) => {
         res.status(200).send({ message: "success" });
       })
@@ -76,14 +75,16 @@ const AddEventDay = (req, res) => {
   }
 };
 const UpdateEventDay = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id, eventDay } = req.params;
   const { name, date, time, venue } = req.body;
   if (!name || !date || !time || !venue || !eventDay) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
     Event.findOneAndUpdate(
-      { _id, user: user_id, "eventDays._id": eventDay },
+      isAdmin
+        ? { _id, "eventDays._id": eventDay }
+        : { _id, user: user_id, "eventDays._id": eventDay },
       {
         $set: {
           "eventDays.$.name": name,
@@ -334,6 +335,40 @@ const GetAll = async (req, res) => {
       // Extract the count from the result
       const count = result.length > 0 ? result[0].count : 0;
       res.send({ pending_approval: count });
+    } else {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const { source, date, search, sort, status } = req.query;
+      const query = {};
+      const sortQuery = {};
+      Event.countDocuments(query)
+        .then((total) => {
+          const totalPages = Math.ceil(total / limit);
+          const skip = (page - 1) * limit;
+          Event.find(query)
+            .sort(sortQuery)
+            .skip(skip)
+            .limit(limit)
+            .populate(
+              "user eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
+            )
+            .exec()
+            .then((result) => {
+              res.send({ list: result, totalPages, page, limit });
+            })
+            .catch((error) => {
+              res.status(400).send({
+                message: "error",
+                error,
+              });
+            });
+        })
+        .catch((error) => {
+          res.status(400).send({
+            message: "error",
+            error,
+          });
+        });
     }
   } else {
     Event.find({ user: user_id })
@@ -373,11 +408,97 @@ const FinalizeEventDay = (req, res) => {
     });
 };
 
-const Get = (req, res) => {
+const FinalizeEvent = (req, res) => {
   const { user_id } = req.auth;
   const { _id } = req.params;
+  Event.findOne({ _id, user: user_id })
+    .then((event) => {
+      let summary = event.eventDays.map((tempEventDay) => {
+        let tempDecorItems = tempEventDay?.decorItems.reduce(
+          (accumulator, currentValue) => {
+            return accumulator + currentValue.price;
+          },
+          0
+        );
+        let tempPackages = tempEventDay?.packages.reduce(
+          (accumulator, currentValue) => {
+            return accumulator + currentValue.price;
+          },
+          0
+        );
+        let tempCustomItems = tempEventDay?.customItems.reduce(
+          (accumulator, currentValue) => {
+            return accumulator + currentValue.price;
+          },
+          0
+        );
+        let tempMandatoryItems = tempEventDay?.mandatoryItems.reduce(
+          (accumulator, currentValue) => {
+            return accumulator + currentValue.price;
+          },
+          0
+        );
+        let tempTotal =
+          tempDecorItems + tempPackages + tempCustomItems + tempMandatoryItems;
+        return {
+          eventDayId: tempEventDay._id,
+          decorItems: tempDecorItems,
+          packages: tempPackages,
+          customItems: tempCustomItems,
+          mandatoryItems: tempMandatoryItems,
+          total: tempTotal,
+          costPrice: 0,
+          sellingPrice: tempTotal,
+        };
+      });
+      let finalTotal = summary.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.total;
+      }, 0);
+      Event.findOneAndUpdate(
+        { _id, user: user_id },
+        {
+          $set: {
+            amount: {
+              total: finalTotal,
+              due: finalTotal,
+              paid: 0,
+              discount: 0,
+              preTotal: finalTotal,
+              costPrice: 0,
+              sellingPrice: finalTotal,
+              summary,
+            },
+            "status.finalized": true,
+            "eventDays.$[elem].status.finalized": true,
+          },
+        },
+        {
+          arrayFilters: [
+            { "elem._id": { $in: summary.map((i) => i.eventDayId) } },
+          ],
+        }
+      )
+        .then((result) => {
+          if (result) {
+            res.status(200).send({ message: "success" });
+          } else {
+            res.status(404).send({ message: "Event not found" });
+          }
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const Get = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id } = req.params;
   const { populate } = req.query;
-  let query = Event.findById({ _id, user: user_id });
+  let query = Event.findById(isAdmin ? { _id } : { _id, user: user_id });
   if (populate === "true") {
     query = query.populate(
       "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
@@ -407,6 +528,7 @@ module.exports = {
   AddDecorPackageInEventDay,
   RemoveDecorPackageInEventDay,
   FinalizeEventDay,
+  FinalizeEvent,
   UpdateEventDay,
   UpdateNotes,
 };
