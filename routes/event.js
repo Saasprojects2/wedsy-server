@@ -24,5 +24,6 @@ router.delete(
   event.RemoveDecorPackageInEventDay
 );
 router.post("/:_id/finalize/:dayId", CheckLogin, event.FinalizeEventDay);
+router.post("/:_id/finalize", CheckLogin, event.FinalizeEvent);
 
 module.exports = router;
