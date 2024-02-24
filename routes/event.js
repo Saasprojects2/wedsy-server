@@ -38,5 +38,10 @@ router.put(
   CheckLogin,
   event.UpdateCustomItemsInEventDay
 );
+router.put(
+  "/:_id/mandatory-items/:dayId",
+  CheckLogin,
+  event.UpdateMandatoryItemsInEventDay
+);
 
 module.exports = router;
