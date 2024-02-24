@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { CheckLogin } = require("../middlewares/auth");
+const { CheckLogin, CheckAdminLogin } = require("../middlewares/auth");
 const event = require("../controllers/event");
 
 router.post("/", CheckLogin, event.CreateNew);
@@ -25,5 +25,18 @@ router.delete(
 );
 router.post("/:_id/finalize/:dayId", CheckLogin, event.FinalizeEventDay);
 router.post("/:_id/finalize", CheckLogin, event.FinalizeEvent);
+router.post("/:_id/approve/:dayId", CheckAdminLogin, event.ApproveEventDay);
+router.delete(
+  "/:_id/approve/:dayId",
+  CheckAdminLogin,
+  event.RemoveEventDayApproval
+);
+router.post("/:_id/approve", CheckAdminLogin, event.ApproveEvent);
+router.delete("/:_id/approve", CheckAdminLogin, event.RemoveEventApproval);
+router.put(
+  "/:_id/custom-items/:dayId",
+  CheckLogin,
+  event.UpdateCustomItemsInEventDay
+);
 
 module.exports = router;
