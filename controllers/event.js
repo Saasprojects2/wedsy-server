@@ -166,6 +166,36 @@ const UpdateNotes = (req, res) => {
   }
 };
 
+const UpdateCustomItemsInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { customItems } = req.body;
+  if (customItems === undefined || customItems === null) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $set: {
+          "eventDays.$.customItems": customItems,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const AddDecorInEventDay = (req, res) => {
   const { user_id } = req.auth;
   const { _id, dayId } = req.params;
@@ -411,83 +441,281 @@ const FinalizeEventDay = (req, res) => {
 const FinalizeEvent = (req, res) => {
   const { user_id } = req.auth;
   const { _id } = req.params;
-  Event.findOne({ _id, user: user_id })
+  Event.findOne({
+    _id,
+    user: user_id,
+    "status.finalized": false,
+    "status.approved": false,
+  })
     .then((event) => {
-      let summary = event.eventDays.map((tempEventDay) => {
-        let tempDecorItems = tempEventDay?.decorItems.reduce(
-          (accumulator, currentValue) => {
-            return accumulator + currentValue.price;
-          },
-          0
-        );
-        let tempPackages = tempEventDay?.packages.reduce(
-          (accumulator, currentValue) => {
-            return accumulator + currentValue.price;
-          },
-          0
-        );
-        let tempCustomItems = tempEventDay?.customItems.reduce(
-          (accumulator, currentValue) => {
-            return accumulator + currentValue.price;
-          },
-          0
-        );
-        let tempMandatoryItems = tempEventDay?.mandatoryItems.reduce(
-          (accumulator, currentValue) => {
-            return accumulator + currentValue.price;
-          },
-          0
-        );
-        let tempTotal =
-          tempDecorItems + tempPackages + tempCustomItems + tempMandatoryItems;
-        return {
-          eventDayId: tempEventDay._id,
-          decorItems: tempDecorItems,
-          packages: tempPackages,
-          customItems: tempCustomItems,
-          mandatoryItems: tempMandatoryItems,
-          total: tempTotal,
-          costPrice: 0,
-          sellingPrice: tempTotal,
-        };
-      });
-      let finalTotal = summary.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.total;
-      }, 0);
-      Event.findOneAndUpdate(
-        { _id, user: user_id },
-        {
-          $set: {
-            amount: {
-              total: finalTotal,
-              due: finalTotal,
-              paid: 0,
-              discount: 0,
-              preTotal: finalTotal,
-              costPrice: 0,
-              sellingPrice: finalTotal,
-              summary,
+      if (event._id) {
+        let summary = event.eventDays.map((tempEventDay) => {
+          let tempDecorItems = tempEventDay?.decorItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
             },
-            "status.finalized": true,
-            "eventDays.$[elem].status.finalized": true,
-          },
-        },
-        {
-          arrayFilters: [
-            { "elem._id": { $in: summary.map((i) => i.eventDayId) } },
-          ],
-        }
-      )
-        .then((result) => {
-          if (result) {
-            res.status(200).send({ message: "success" });
-          } else {
-            res.status(404).send({ message: "Event not found" });
-          }
-        })
-        .catch((error) => {
-          res.status(400).send({ message: "error", error });
+            0
+          );
+          let tempPackages = tempEventDay?.packages.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempCustomItems = tempEventDay?.customItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempMandatoryItems = tempEventDay?.mandatoryItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempTotal =
+            tempDecorItems +
+            tempPackages +
+            tempCustomItems +
+            tempMandatoryItems;
+          return {
+            eventDayId: tempEventDay._id,
+            decorItems: tempDecorItems,
+            packages: tempPackages,
+            customItems: tempCustomItems,
+            mandatoryItems: tempMandatoryItems,
+            total: tempTotal,
+            costPrice: 0,
+            sellingPrice: tempTotal,
+          };
         });
+        let finalTotal = summary.reduce((accumulator, currentValue) => {
+          return accumulator + currentValue.total;
+        }, 0);
+        Event.findOneAndUpdate(
+          {
+            _id,
+            user: user_id,
+            "status.finalized": false,
+            "status.approved": false,
+          },
+          {
+            $set: {
+              amount: {
+                total: finalTotal,
+                due: finalTotal,
+                paid: 0,
+                discount: 0,
+                preTotal: finalTotal,
+                costPrice: 0,
+                sellingPrice: finalTotal,
+                summary,
+              },
+              "status.finalized": true,
+              "eventDays.$[elem].status.finalized": true,
+            },
+          },
+          {
+            arrayFilters: [
+              { "elem._id": { $in: summary.map((i) => i.eventDayId) } },
+            ],
+          }
+        )
+          .then((result) => {
+            if (result) {
+              res.status(200).send({ message: "success" });
+            } else {
+              res.status(404).send({ message: "Event not found" });
+            }
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const ApproveEventDay = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  Event.findOneAndUpdate(
+    {
+      _id,
+      "status.finalized": true,
+      "status.approved": false,
+      eventDays: { $elemMatch: { _id: dayId, "status.finalized": true } },
+    },
+    {
+      $set: {
+        "eventDays.$.status.approved": true,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const RemoveEventDayApproval = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id, dayId } = req.params;
+  Event.findOneAndUpdate(
+    {
+      _id,
+      "status.finalized": true,
+      "status.approved": false,
+      eventDays: {
+        $elemMatch: {
+          _id: dayId,
+          "status.finalized": true,
+          "status.approved": true,
+        },
+      },
+    },
+    {
+      $set: {
+        "eventDays.$.status.approved": false,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const ApproveEvent = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id } = req.params;
+  const { discount } = req.body;
+  Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+    .then((event) => {
+      if (event._id) {
+        let summary = event.eventDays.map((tempEventDay) => {
+          let tempDecorItems = tempEventDay?.decorItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempPackages = tempEventDay?.packages.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempCustomItems = tempEventDay?.customItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempMandatoryItems = tempEventDay?.mandatoryItems.reduce(
+            (accumulator, currentValue) => {
+              return accumulator + currentValue.price;
+            },
+            0
+          );
+          let tempTotal =
+            tempDecorItems +
+            tempPackages +
+            tempCustomItems +
+            tempMandatoryItems;
+          return {
+            eventDayId: tempEventDay._id,
+            decorItems: tempDecorItems,
+            packages: tempPackages,
+            customItems: tempCustomItems,
+            mandatoryItems: tempMandatoryItems,
+            total: tempTotal,
+            costPrice: 0,
+            sellingPrice: tempTotal,
+          };
+        });
+        let finalPreTotal = summary.reduce((accumulator, currentValue) => {
+          return accumulator + currentValue.total;
+        }, 0);
+        const tempDiscount = discount || 0;
+        let finalTotal = finalPreTotal - tempDiscount;
+        Event.findOneAndUpdate(
+          { _id, "status.finalized": true, "status.approved": false },
+          {
+            $set: {
+              amount: {
+                total: finalTotal,
+                due: finalTotal,
+                paid: 0,
+                discount: tempDiscount,
+                preTotal: finalPreTotal,
+                costPrice: 0,
+                sellingPrice: finalTotal,
+                summary,
+              },
+              "status.approved": true,
+              "eventDays.$[elem].status.approved": true,
+            },
+          },
+          {
+            arrayFilters: [
+              { "elem._id": { $in: summary.map((i) => i.eventDayId) } },
+            ],
+          }
+        )
+          .then((result) => {
+            if (result) {
+              res.status(200).send({ message: "success" });
+            } else {
+              res.status(404).send({ message: "Event not found" });
+            }
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const RemoveEventApproval = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id } = req.params;
+  Event.findOneAndUpdate(
+    { _id, "status.finalized": true, "status.approved": true },
+    {
+      $set: {
+        "status.approved": false,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
     })
     .catch((error) => {
       res.status(400).send({ message: "error", error });
@@ -531,4 +759,9 @@ module.exports = {
   FinalizeEvent,
   UpdateEventDay,
   UpdateNotes,
+  UpdateCustomItemsInEventDay,
+  ApproveEvent,
+  RemoveEventApproval,
+  RemoveEventDayApproval,
+  ApproveEventDay,
 };
