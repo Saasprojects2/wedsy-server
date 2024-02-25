@@ -227,7 +227,7 @@ const UpdateMandatoryItemsInEventDay = (req, res) => {
 };
 
 const AddDecorInEventDay = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
   const {
     decor,
@@ -244,7 +244,9 @@ const AddDecorInEventDay = (req, res) => {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
     Event.findOneAndUpdate(
-      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      isAdmin
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $addToSet: {
           "eventDays.$.decorItems": {
@@ -275,14 +277,16 @@ const AddDecorInEventDay = (req, res) => {
 };
 
 const RemoveDecorInEventDay = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
   const { decor } = req.body;
   if (!decor) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
     Event.findOneAndUpdate(
-      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      isAdmin
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $pull: {
           "eventDays.$.decorItems": {
@@ -338,14 +342,16 @@ const AddDecorPackageInEventDay = (req, res) => {
 };
 
 const RemoveDecorPackageInEventDay = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
   const { package } = req.body;
   if (!package) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
     Event.findOneAndUpdate(
-      { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      isAdmin
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $pull: {
           "eventDays.$.packages": {
