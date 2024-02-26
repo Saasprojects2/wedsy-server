@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
   const { user_id } = req.auth;
@@ -112,15 +113,18 @@ const UpdateNotes = (req, res) => {
   } else {
     if (decor_id) {
       Event.updateOne(
-        {
-          _id,
-          user: isAdmin ? user : user_id,
-          "eventDays._id": eventDay,
-        },
+        isAdmin
+          ? { _id, "eventDays._id": eventDay }
+          : {
+              _id,
+              user: user_id,
+              "eventDays._id": eventDay,
+            },
         {
           $set: isAdmin
             ? {
                 "eventDays.$[].decorItems.$[x].admin_notes": admin_notes,
+                "eventDays.$[].decorItems.$[x].user_notes": user_notes,
               }
             : {
                 "eventDays.$[].decorItems.$[x].user_notes": user_notes,
@@ -138,15 +142,18 @@ const UpdateNotes = (req, res) => {
         });
     } else if (package_id) {
       Event.updateOne(
-        {
-          _id,
-          user: isAdmin ? user : user_id,
-          "eventDays._id": eventDay,
-        },
+        isAdmin
+          ? { _id, "eventDays._id": eventDay }
+          : {
+              _id,
+              user: user_id,
+              "eventDays._id": eventDay,
+            },
         {
           $set: isAdmin
             ? {
                 "eventDays.$[].packages.$[x].admin_notes": admin_notes,
+                "eventDays.$[].packages.$[x].user_notes": user_notes,
               }
             : {
                 "eventDays.$[].packages.$[x].user_notes": user_notes,
@@ -781,6 +788,28 @@ const Get = (req, res) => {
     });
 };
 
+const SendEventToClient = (req, res) => {
+  const { _id } = req.params;
+  Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+    .populate("user")
+    .exec()
+    .then((event) => {
+      if (event._id) {
+        // SendUpdate({
+        //   channels: ["Whatsapp"],
+        //   message: "Event Planner",
+        //   parameters: { name: event?.user?.name, phone: event?.user?.phone },
+        // });
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
 module.exports = {
   CreateNew,
   Update,
@@ -801,4 +830,5 @@ module.exports = {
   RemoveEventApproval,
   RemoveEventDayApproval,
   ApproveEventDay,
+  SendEventToClient,
 };
