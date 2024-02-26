@@ -2,9 +2,38 @@ const axios = require("axios");
 
 // Channels(array): SMS, Whatsapp
 // Message: New Lead; New User, Event Finalized, Event Approved
+// Message: Event Planner (to Client by admin, whatsapp)
 const SendUpdate = ({ channels, message, parameters }) => {
   const { name, phone } = parameters;
   let data = "";
+  if (message === "Event Planner") {
+    if (channels.includes("Whatsapp")) {
+      try {
+        data = JSON.stringify({
+          apiKey: process.env.AISENSY_API_KEY,
+          // campaignName: "user_lead",
+          destination: phone,
+          userName: name,
+          templateParams: [name],
+        });
+        axios({
+          method: "post",
+          url: `${process.env.AISENSY_API_URL}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: data,
+          data,
+        })
+          .then(function (response) {})
+          .catch(function (error) {
+            console.log("Error while sending SMS", error);
+          });
+      } catch (error) {
+        console.log("Error while sending SMS", error);
+      }
+    }
+  }
   if (message === "New Lead") {
     // user_lead
     if (channels.includes("SMS") && phone.includes("+91")) {
