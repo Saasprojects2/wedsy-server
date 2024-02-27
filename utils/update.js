@@ -11,10 +11,10 @@ const SendUpdate = ({ channels, message, parameters }) => {
       try {
         data = JSON.stringify({
           apiKey: process.env.AISENSY_API_KEY,
-          // campaignName: "user_lead",
+          campaignName: "event_update",
           destination: phone,
           userName: name,
-          templateParams: [name],
+          templateParams: ["https://wedsy.in/event"],
         });
         axios({
           method: "post",
