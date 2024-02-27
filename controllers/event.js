@@ -283,6 +283,38 @@ const AddDecorInEventDay = (req, res) => {
   }
 };
 
+const EditDecorAddOnsInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor_id, addOns, price } = req.body;
+  if (!decor_id || addOns === undefined) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].addOns": addOns,
+          "eventDays.$[].decorItems.$[x].price": price,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const RemoveDecorInEventDay = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
@@ -817,6 +849,7 @@ module.exports = {
   Get,
   AddEventDay,
   AddDecorInEventDay,
+  EditDecorAddOnsInEventDay,
   RemoveDecorInEventDay,
   AddDecorPackageInEventDay,
   RemoveDecorPackageInEventDay,
