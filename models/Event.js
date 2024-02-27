@@ -46,6 +46,16 @@ const EventSchema = new mongoose.Schema(
                 },
                 user_notes: { type: String, default: "" },
                 admin_notes: { type: String, default: "" },
+                addOns: {
+                  type: [
+                    {
+                      name: { type: String, default: "" },
+                      price: { type: Number, default: 0 },
+                    },
+                  ],
+                  required: true,
+                  default: [],
+                },
               },
             ],
             default: [],
