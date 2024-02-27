@@ -827,11 +827,11 @@ const SendEventToClient = (req, res) => {
     .exec()
     .then((event) => {
       if (event._id) {
-        // SendUpdate({
-        //   channels: ["Whatsapp"],
-        //   message: "Event Planner",
-        //   parameters: { name: event?.user?.name, phone: event?.user?.phone },
-        // });
+        SendUpdate({
+          channels: ["Whatsapp"],
+          message: "Event Planner",
+          parameters: { name: event?.user?.name, phone: event?.user?.phone },
+        });
         res.status(200).send({ message: "success" });
       } else {
         res.status(404).send({ message: "Event not found" });
