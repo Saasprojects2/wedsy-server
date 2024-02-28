@@ -2,13 +2,13 @@ const Event = require("../models/Event");
 const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
-  const { user_id } = req.auth;
-  const { name, community, eventDay, date, time, venue } = req.body;
+  const { user_id, isAdmin } = req.auth;
+  const { name, community, eventDay, date, time, venue, user } = req.body;
   if (!name || !community || !eventDay || !date || !time || !venue) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
     new Event({
-      user: user_id,
+      user: isAdmin ? user : user_id,
       name,
       community,
       eventDays: [{ name: eventDay, date, time, venue }],
@@ -822,7 +822,8 @@ const Get = (req, res) => {
 
 const SendEventToClient = (req, res) => {
   const { _id } = req.params;
-  Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+  // Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+  Event.findOne({ _id })
     .populate("user")
     .exec()
     .then((event) => {
