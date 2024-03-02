@@ -1,12 +1,26 @@
 const express = require("express");
 const router = express.Router();
 
-const { CheckLogin, CheckAdminLogin } = require("../middlewares/auth");
+const {
+  CheckToken,
+  CheckLogin,
+  CheckAdminLogin,
+} = require("../middlewares/auth");
 const event = require("../controllers/event");
 
 router.post("/", CheckLogin, event.CreateNew);
 router.get("/", CheckLogin, event.GetAll);
-router.get("/:_id", CheckLogin, event.Get);
+router.get(
+  "/:_id",
+  (req, res, next) => {
+    if (req.query.display === "true") {
+      CheckToken(req, res, next);
+    } else {
+      CheckLogin(req, res, next);
+    }
+  },
+  event.Get
+);
 router.put("/:_id", CheckLogin, event.Update);
 router.post("/:_id/send", CheckAdminLogin, event.SendEventToClient);
 router.post("/:_id/eventDay", CheckLogin, event.AddEventDay);

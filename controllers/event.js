@@ -800,8 +800,10 @@ const RemoveEventApproval = (req, res) => {
 const Get = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
-  const { populate } = req.query;
-  let query = Event.findById(isAdmin ? { _id } : { _id, user: user_id });
+  const { populate, display } = req.query;
+  let query = Event.findById(
+    isAdmin || display == "true" ? { _id } : { _id, user: user_id }
+  );
   if (populate === "true") {
     query = query.populate(
       "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
@@ -812,7 +814,14 @@ const Get = (req, res) => {
       if (!result) {
         res.status(404).send();
       } else {
-        res.send(result);
+        if (display == "true" && !isAdmin) {
+          res.send({
+            ...result.toObject(),
+            userAccess: user_id == result.user,
+          });
+        } else {
+          res.send(result);
+        }
       }
     })
     .catch((error) => {
