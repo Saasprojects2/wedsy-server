@@ -14,7 +14,7 @@ const SendUpdate = ({ channels, message, parameters }) => {
           campaignName: "event_update",
           destination: phone,
           userName: name,
-          templateParams: ["https://wedsy.in/event"],
+          templateParams: [parameters?.link || "https://wedsy.in/event/"],
         });
         axios({
           method: "post",

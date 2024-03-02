@@ -840,7 +840,11 @@ const SendEventToClient = (req, res) => {
         SendUpdate({
           channels: ["Whatsapp"],
           message: "Event Planner",
-          parameters: { name: event?.user?.name, phone: event?.user?.phone },
+          parameters: {
+            name: event?.user?.name,
+            phone: event?.user?.phone,
+            link: `https://wedsy.in/event/${event?._id}/view`,
+          },
         });
         res.status(200).send({ message: "success" });
       } else {
