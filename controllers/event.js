@@ -683,6 +683,8 @@ const ApproveEvent = (req, res) => {
   const { _id } = req.params;
   const { discount } = req.body;
   Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+    .populate("user")
+    .exec()
     .then((event) => {
       if (event._id) {
         let summary = event.eventDays.map((tempEventDay) => {
@@ -757,6 +759,14 @@ const ApproveEvent = (req, res) => {
         )
           .then((result) => {
             if (result) {
+              SendUpdate({
+                channels: ["Whatsapp"],
+                message: "Event Approved",
+                parameters: {
+                  name: event?.user?.name,
+                  phone: event?.user?.phone,
+                },
+              });
               res.status(200).send({ message: "success" });
             } else {
               res.status(404).send({ message: "Event not found" });
@@ -856,6 +866,32 @@ const SendEventToClient = (req, res) => {
     });
 };
 
+const SendEventBookingReminder = (req, res) => {
+  const { _id } = req.params;
+  // Event.findOne({ _id, "status.finalized": true, "status.approved": false })
+  Event.findOne({ _id })
+    .populate("user")
+    .exec()
+    .then((event) => {
+      if (event._id) {
+        SendUpdate({
+          channels: ["Whatsapp"],
+          message: "Booking Reminder",
+          parameters: {
+            name: event?.user?.name,
+            phone: event?.user?.phone,
+          },
+        });
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
 module.exports = {
   CreateNew,
   Update,
@@ -878,4 +914,5 @@ module.exports = {
   RemoveEventDayApproval,
   ApproveEventDay,
   SendEventToClient,
+  SendEventBookingReminder,
 };

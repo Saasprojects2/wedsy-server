@@ -23,6 +23,11 @@ router.get(
 );
 router.put("/:_id", CheckLogin, event.Update);
 router.post("/:_id/send", CheckAdminLogin, event.SendEventToClient);
+router.post(
+  "/:_id/booking-reminder",
+  CheckAdminLogin,
+  event.SendEventBookingReminder
+);
 router.post("/:_id/eventDay", CheckLogin, event.AddEventDay);
 router.put("/:_id/eventDay/:eventDay", CheckLogin, event.UpdateEventDay);
 router.put("/:_id/eventDay/:eventDay/notes", CheckLogin, event.UpdateNotes);
