@@ -33,8 +33,7 @@ const SendUpdate = ({ channels, message, parameters }) => {
         console.log("Error while sending SMS", error);
       }
     }
-  }
-  if (message === "New Lead") {
+  } else if (message === "New Lead") {
     // user_lead
     if (channels.includes("SMS") && phone.includes("+91")) {
       try {
@@ -125,6 +124,60 @@ const SendUpdate = ({ channels, message, parameters }) => {
         data = JSON.stringify({
           apiKey: process.env.AISENSY_API_KEY,
           campaignName: "account_success",
+          destination: phone,
+          userName: name,
+          templateParams: [name],
+        });
+        axios({
+          method: "post",
+          url: `${process.env.AISENSY_API_URL}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: data,
+          data,
+        })
+          .then(function (response) {})
+          .catch(function (error) {
+            console.log("Error while sending SMS", error);
+          });
+      } catch (error) {
+        console.log("Error while sending SMS", error);
+      }
+    }
+  } else if (message === "Event Approved") {
+    if (channels.includes("Whatsapp")) {
+      try {
+        data = JSON.stringify({
+          apiKey: process.env.AISENSY_API_KEY,
+          campaignName: "eventapproval_confim",
+          destination: phone,
+          userName: name,
+          templateParams: [name],
+        });
+        axios({
+          method: "post",
+          url: `${process.env.AISENSY_API_URL}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: data,
+          data,
+        })
+          .then(function (response) {})
+          .catch(function (error) {
+            console.log("Error while sending SMS", error);
+          });
+      } catch (error) {
+        console.log("Error while sending SMS", error);
+      }
+    }
+  } else if (message === "Booking Reminder") {
+    if (channels.includes("Whatsapp")) {
+      try {
+        data = JSON.stringify({
+          apiKey: process.env.AISENSY_API_KEY,
+          campaignName: "booking_remind",
           destination: phone,
           userName: name,
           templateParams: [name],
