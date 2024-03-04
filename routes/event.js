@@ -30,6 +30,7 @@ router.post(
 );
 router.post("/:_id/eventDay", CheckLogin, event.AddEventDay);
 router.put("/:_id/eventDay/:eventDay", CheckLogin, event.UpdateEventDay);
+router.delete("/:_id/eventDay/:eventDay", CheckLogin, event.DeleteEventDay);
 router.put("/:_id/eventDay/:eventDay/notes", CheckLogin, event.UpdateNotes);
 router.post("/:_id/decor/:dayId", CheckLogin, event.AddDecorInEventDay);
 router.put(

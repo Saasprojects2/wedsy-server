@@ -96,12 +96,46 @@ const UpdateEventDay = (req, res) => {
       }
     )
       .then((result) => {
-        res.status(200).send({ message: "success" });
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
       })
       .catch((error) => {
         res.status(400).send({ message: "error", error });
       });
   }
+};
+
+const DeleteEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, eventDay } = req.params;
+  Event.findOneAndUpdate(
+    isAdmin
+      ? { _id, "eventDays._id": eventDay, "status.approved": false }
+      : {
+          _id,
+          user: user_id,
+          "eventDays._id": eventDay,
+          "status.finalized": false,
+        },
+    {
+      $pull: {
+        eventDays: { _id: eventDay },
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
 };
 
 const UpdateNotes = (req, res) => {
@@ -135,6 +169,8 @@ const UpdateNotes = (req, res) => {
         .then((result) => {
           if (result) {
             res.status(200).send({ message: "success" });
+          } else {
+            res.status(404).send({ message: "Event not found" });
           }
         })
         .catch((error) => {
@@ -164,6 +200,8 @@ const UpdateNotes = (req, res) => {
         .then((result) => {
           if (result) {
             res.status(200).send({ message: "success" });
+          } else {
+            res.status(404).send({ message: "Event not found" });
           }
         })
         .catch((error) => {
@@ -908,6 +946,7 @@ module.exports = {
   FinalizeEventDay,
   FinalizeEvent,
   UpdateEventDay,
+  DeleteEventDay,
   UpdateNotes,
   UpdateCustomItemsInEventDay,
   UpdateMandatoryItemsInEventDay,
