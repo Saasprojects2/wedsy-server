@@ -523,7 +523,7 @@ const FinalizeEvent = (req, res) => {
     "status.approved": false,
   })
     .then((event) => {
-      if (event._id) {
+      if (event?._id) {
         let summary = event.eventDays.map((tempEventDay) => {
           let tempDecorItems = tempEventDay?.decorItems.reduce(
             (accumulator, currentValue) => {
@@ -816,7 +816,9 @@ const Get = (req, res) => {
   );
   if (populate === "true") {
     query = query.populate(
-      "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
+      isAdmin
+        ? "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor user"
+        : "eventDays.decorItems.decor eventDays.packages.package eventDays.packages.decorItems.decor"
     );
   }
   query
