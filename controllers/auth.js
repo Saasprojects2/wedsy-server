@@ -5,6 +5,7 @@ const jwtConfig = require("../config/jwt");
 const Admin = require("../models/Admin");
 const { CheckHash, CreateHash } = require("../utils/password");
 const { SendUpdate } = require("../utils/update");
+const Enquiry = require("../models/Enquiry");
 
 const Login = (req, res) => {
   const { name, phone, Otp, ReferenceId } = req.body;
@@ -40,6 +41,16 @@ const Login = (req, res) => {
                       process.env.JWT_SECRET,
                       jwtConfig
                     );
+                    new Enquiry({
+                      name,
+                      phone,
+                      verified: true,
+                      source: "User Signup (Account Creation)",
+                      additionalInfo: {},
+                    })
+                      .save()
+                      .then((result) => {})
+                      .catch((error) => {});
                     SendUpdate({
                       channels: ["SMS", "Whatsapp"],
                       message: "New User",
