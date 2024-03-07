@@ -11,7 +11,7 @@ const SendUpdate = ({ channels, message, parameters }) => {
       try {
         data = JSON.stringify({
           apiKey: process.env.AISENSY_API_KEY,
-          campaignName: "event_update",
+          campaignName: "event_update_2",
           destination: phone,
           userName: name,
           templateParams: [parameters?.link || "https://wedsy.in/event/"],
