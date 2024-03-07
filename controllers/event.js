@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const User = require("../models/User");
 const { SendUpdate } = require("../utils/update");
 
 const CreateNew = (req, res) => {
@@ -486,6 +487,17 @@ const GetAll = async (req, res) => {
       const sortQuery = {};
       if (search) {
         query.$or = [{ name: { $regex: new RegExp(search, "i") } }];
+        query.$or.push({
+          user: {
+            $in: await User.find({
+              $or: [
+                { name: { $regex: new RegExp(search, "i") } },
+                { phone: { $regex: new RegExp(search, "i") } },
+                { email: { $regex: new RegExp(search, "i") } },
+              ],
+            }).distinct("_id"),
+          },
+        });
       }
       if (status) {
         if (status === "Finalized") {
@@ -517,7 +529,7 @@ const GetAll = async (req, res) => {
           sortQuery.createdAt = 1;
         }
       } else {
-        sortQuery.createdAt = 1;
+        sortQuery.createdAt = -1;
       }
       Event.countDocuments(query)
         .then((total) => {
