@@ -481,9 +481,44 @@ const GetAll = async (req, res) => {
     } else {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
-      const { source, date, search, sort, status } = req.query;
+      const { search, sort, status } = req.query;
       const query = {};
       const sortQuery = {};
+      if (search) {
+        query.$or = [{ name: { $regex: new RegExp(search, "i") } }];
+      }
+      if (status) {
+        if (status === "Finalized") {
+          query["status.finalized"] = true;
+          query["status.approved"] = false;
+          query["status.paymentDone"] = false;
+          query["status.completed"] = false;
+        } else if (status === "Approved") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = false;
+          query["status.completed"] = false;
+        } else if (status === "Payment Done") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = true;
+          query["status.completed"] = false;
+        } else if (status === "Completed") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = true;
+          query["status.completed"] = true;
+        }
+      }
+      if (sort) {
+        if (sort === "Newest (Creation)") {
+          sortQuery.createdAt = -1;
+        } else if (sort === "Older (Creation)") {
+          sortQuery.createdAt = 1;
+        }
+      } else {
+        sortQuery.createdAt = 1;
+      }
       Event.countDocuments(query)
         .then((total) => {
           const totalPages = Math.ceil(total / limit);
