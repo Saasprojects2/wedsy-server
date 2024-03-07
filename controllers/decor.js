@@ -108,6 +108,17 @@ const GetAll = (req, res) => {
           error,
         });
       });
+  } else if (spotlight === "true" && random === "false") {
+    Decor.find({ spotlight: true })
+      .then((result) => {
+        res.send({ list: result });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
   } else if (similarDecorFor) {
     Decor.aggregate([
       {
