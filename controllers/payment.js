@@ -228,7 +228,7 @@ const UpdatePayment = (req, res) => {
     });
 };
 
-const GetAllPayments = (req, res) => {
+const GetAllPayments = async (req, res) => {
   const { user_id, isAdmin } = req.auth;
   if (isAdmin) {
     // Admin Controller
@@ -297,12 +297,39 @@ const GetAllPayments = (req, res) => {
       });
   } else {
     // User Controller
-    Payment.find({ user: user_id })
+    let payments = await Payment.find({ user: user_id })
       .populate("event")
-      .then((result) => res.status(200).send(result))
-      .catch((error) => {
-        res.status(400).send({ message: "error", error });
-      });
+      .exec();
+    let events = await Event.find({ user: user_id });
+    let { totalAmount, amountPaid, amountDue } = events
+      ?.filter((e) => e?.status?.approved)
+      .reduce(
+        (accumulator, e) => {
+          accumulator.totalAmount += e?.amount?.total;
+          accumulator.amountPaid += e?.amount?.paid;
+          accumulator.amountDue += e?.amount?.due;
+          return accumulator;
+        },
+        { totalAmount: 0, amountPaid: 0, amountDue: 0 }
+      );
+    let received = payments
+      .filter((p) => p?.status === "paid")
+      .reduce((accumulator, e) => {
+        return accumulator + e.amountPaid;
+      }, 0);
+    Promise.all(
+      payments.map(async (item) => {
+        let transactions = [];
+        if (item?.razporPayId) {
+          transactions = await GetPaymentTransactions({
+            order_id: item?.razporPayId,
+          });
+        }
+        return { ...item.toObject(), transactions };
+      })
+    ).then((result) => {
+      res.send({ totalAmount, amountPaid, amountDue, payments: result });
+    });
   }
 };
 
