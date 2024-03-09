@@ -79,7 +79,6 @@ const GetPaymentTransactions = ({ order_id }) => {
       if (err) {
         reject({ message: "error", err });
       } else {
-        console.log(transactions);
         resolve(transactions.items);
       }
     });
