@@ -328,7 +328,13 @@ const GetAllPayments = async (req, res) => {
         return { ...item.toObject(), transactions };
       })
     ).then((result) => {
-      res.send({ totalAmount, amountPaid, amountDue, payments: result });
+      res.send({
+        totalAmount,
+        amountPaid,
+        amountDue,
+        payments: result,
+        events,
+      });
     });
   }
 };
