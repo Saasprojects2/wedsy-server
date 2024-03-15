@@ -6,6 +6,7 @@ const jwtConfig = require("../config/jwt");
 const Event = require("../models/Event");
 const Payment = require("../models/Payment");
 const { SendUpdate } = require("../utils/update");
+const { GetPaymentTransactions } = require("../utils/payment");
 
 const CreateNew = (req, res) => {
   const { name, phone, verified, source, Otp, ReferenceId, additionalInfo } =
@@ -489,23 +490,46 @@ const Get = (req, res) => {
                     .populate("event")
                     .then((payments) => {
                       const { totalAmount, amountPaid, amountDue } =
-                        payments.reduce(
-                          (accumulator, payment) => {
-                            accumulator.totalAmount += payment.amount;
-                            accumulator.amountPaid += payment.amountPaid;
-                            accumulator.amountDue += payment.amountDue;
+                        events.reduce(
+                          (accumulator, e) => {
+                            accumulator.totalAmount += e?.amount.total;
+                            accumulator.amountPaid += e?.amount.paid;
+                            accumulator.amountDue += e?.amount.due;
                             return accumulator;
                           },
                           { totalAmount: 0, amountPaid: 0, amountDue: 0 }
                         );
-                      res.send({
-                        ...result.toObject(),
-                        userCreated: true,
-                        user,
-                        events,
-                        payments,
-                        paymentStats: { totalAmount, amountPaid, amountDue },
-                      });
+                      Promise.all(
+                        payments.map(async (item) => {
+                          let transactions = [];
+                          if (
+                            item?.razporPayId &&
+                            item?.paymentMethod !== "cash"
+                          ) {
+                            transactions = await GetPaymentTransactions({
+                              order_id: item?.razporPayId,
+                            });
+                          }
+                          return { ...item.toObject(), transactions };
+                        })
+                      )
+                        .then((updatedPayments) => {
+                          res.send({
+                            ...result.toObject(),
+                            userCreated: true,
+                            user,
+                            events,
+                            payments: updatedPayments,
+                            paymentStats: {
+                              totalAmount,
+                              amountPaid,
+                              amountDue,
+                            },
+                          });
+                        })
+                        .catch((error) => {
+                          res.status(400).send({ message: "error", error });
+                        });
                     })
                     .catch((error) => {
                       res.status(400).send({ message: "error", error });
