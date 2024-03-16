@@ -892,6 +892,29 @@ const RemoveEventApproval = (req, res) => {
     });
 };
 
+const RemoveEventFinalize = (req, res) => {
+  const { user_id } = req.auth;
+  const { _id } = req.params;
+  Event.findOneAndUpdate(
+    { _id, "status.finalized": true, "status.approved": false },
+    {
+      $set: {
+        "status.finalized": false,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
 const Get = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
@@ -1000,6 +1023,7 @@ module.exports = {
   ApproveEvent,
   RemoveEventApproval,
   RemoveEventDayApproval,
+  RemoveEventFinalize,
   ApproveEventDay,
   SendEventToClient,
   SendEventBookingReminder,

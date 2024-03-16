@@ -59,6 +59,7 @@ router.delete(
 );
 router.post("/:_id/approve", CheckAdminLogin, event.ApproveEvent);
 router.delete("/:_id/approve", CheckAdminLogin, event.RemoveEventApproval);
+router.delete("/:_id/finalize", CheckAdminLogin, event.RemoveEventFinalize);
 router.put(
   "/:_id/custom-items/:dayId",
   CheckLogin,
