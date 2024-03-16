@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Event = require("../models/Event");
 const { VerifyOTP, SendOTP } = require("../utils/otp");
 const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
@@ -140,10 +141,13 @@ const AdminLogin = (req, res) => {
   }
 };
 
-const Get = (req, res) => {
-  const { user } = req.auth;
+const Get = async (req, res) => {
+  const { user, user_id } = req.auth;
   const { name, phone, email } = user;
-  res.send({ name, phone, email });
+  const event = await Event.find({ user: user_id }, "_id")
+    .then((result) => result[0]?._id || "")
+    .catch((e) => {});
+  res.send({ name, phone, email, event: event || null });
 };
 
 const GetAdmin = (req, res) => {
