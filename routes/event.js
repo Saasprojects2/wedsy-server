@@ -62,12 +62,17 @@ router.delete("/:_id/approve", CheckAdminLogin, event.RemoveEventApproval);
 router.delete("/:_id/finalize", CheckAdminLogin, event.RemoveEventFinalize);
 router.put(
   "/:_id/custom-items/:dayId",
-  CheckLogin,
+  CheckAdminLogin,
   event.UpdateCustomItemsInEventDay
 );
 router.put(
+  "/:_id/custom-items-title/:dayId",
+  CheckAdminLogin,
+  event.UpdateCustomItemsTitleInEventDay
+);
+router.put(
   "/:_id/mandatory-items/:dayId",
-  CheckLogin,
+  CheckAdminLogin,
   event.UpdateMandatoryItemsInEventDay
 );
 

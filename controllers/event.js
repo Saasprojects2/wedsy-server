@@ -242,6 +242,36 @@ const UpdateCustomItemsInEventDay = (req, res) => {
   }
 };
 
+const UpdateCustomItemsTitleInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { customItemsTitle } = req.body;
+  if (customItemsTitle === undefined || customItemsTitle === null) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
+      {
+        $set: {
+          "eventDays.$.customItemsTitle": customItemsTitle,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const UpdateMandatoryItemsInEventDay = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
@@ -1020,6 +1050,7 @@ module.exports = {
   UpdateNotes,
   UpdateCustomItemsInEventDay,
   UpdateMandatoryItemsInEventDay,
+  UpdateCustomItemsTitleInEventDay,
   ApproveEvent,
   RemoveEventApproval,
   RemoveEventDayApproval,
