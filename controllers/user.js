@@ -6,8 +6,8 @@ const GetUser = (req, res) => {
     .exec()
     .then((result) => {
       if (result) {
-        const { name, phone, email, address } = result;
-        res.send({ name, phone, email, address });
+        const { name, phone, email, address, profilePhoto } = result;
+        res.send({ name, phone, email, address, profilePhoto });
       } else {
         res.status(404).send();
       }
@@ -22,14 +22,20 @@ const GetUser = (req, res) => {
 
 const UpdateUser = (req, res) => {
   const { user_id } = req.auth;
-  const { name, phone, email, address } = req.body;
-  if ((!name || !email || !phone) && !address) {
+  const { name, phone, email, address, profilePhoto } = req.body;
+  if ((!name || !email || !phone) && !address && !profilePhoto) {
     res.status(400).send();
     return;
   }
   User.findByIdAndUpdate(
     { _id: user_id },
-    { $set: name ? { name, phone, email } : { address } }
+    {
+      $set: name
+        ? { name, phone, email }
+        : profilePhoto
+        ? { profilePhoto }
+        : { address },
+    }
   )
     .exec()
     .then((result) => {
