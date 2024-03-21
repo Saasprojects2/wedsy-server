@@ -501,10 +501,11 @@ const Get = (req, res) => {
                         );
                       Promise.all(
                         payments.map(async (item) => {
-                          let transactions = [];
+                          let transactions = item.transactions || [];
                           if (
                             item?.razporPayId &&
-                            item?.paymentMethod !== "cash"
+                            item?.paymentMethod !== "cash" &&
+                            transactions.length == 0
                           ) {
                             transactions = await GetPaymentTransactions({
                               order_id: item?.razporPayId,
