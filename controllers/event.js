@@ -629,14 +629,22 @@ const FinalizeEventDay = (req, res) => {
 };
 
 const FinalizeEvent = (req, res) => {
-  const { user_id } = req.auth;
+  const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
-  Event.findOne({
-    _id,
-    user: user_id,
-    "status.finalized": false,
-    "status.approved": false,
-  })
+  Event.findOne(
+    isAdmin
+      ? {
+          _id,
+          "status.finalized": false,
+          "status.approved": false,
+        }
+      : {
+          _id,
+          user: user_id,
+          "status.finalized": false,
+          "status.approved": false,
+        }
+  )
     .then((event) => {
       if (event?._id) {
         let summary = event.eventDays.map((tempEventDay) => {
@@ -684,12 +692,18 @@ const FinalizeEvent = (req, res) => {
           return accumulator + currentValue.total;
         }, 0);
         Event.findOneAndUpdate(
-          {
-            _id,
-            user: user_id,
-            "status.finalized": false,
-            "status.approved": false,
-          },
+          isAdmin
+            ? {
+                _id,
+                "status.finalized": false,
+                "status.approved": false,
+              }
+            : {
+                _id,
+                user: user_id,
+                "status.finalized": false,
+                "status.approved": false,
+              },
           {
             $set: {
               amount: {
