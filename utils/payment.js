@@ -79,6 +79,10 @@ const GetPaymentTransactions = ({ order_id }) => {
       if (err) {
         reject({ message: "error", err });
       } else {
+        Payment.findOneAndUpdate(
+          { razporPayId: order_id },
+          { $set: { transactions: transactions.items } }
+        );
         resolve(transactions.items);
       }
     });
