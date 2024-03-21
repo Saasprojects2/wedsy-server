@@ -321,23 +321,29 @@ const GetAllPayments = async (req, res) => {
       }, 0);
     Promise.all(
       payments.map(async (item) => {
-        let transactions = [];
-        if (item?.razporPayId && item?.paymentMethod !== "cash") {
+        let transactions = item.transactions || [];
+        if (
+          item?.razporPayId &&
+          item?.paymentMethod !== "cash" &&
+          transactions.length == 0
+        ) {
           transactions = await GetPaymentTransactions({
             order_id: item?.razporPayId,
           });
         }
         return { ...item.toObject(), transactions };
       })
-    ).then((result) => {
-      res.send({
-        totalAmount,
-        amountPaid,
-        amountDue,
-        payments: result,
-        events,
-      });
-    });
+    )
+      .then((result) => {
+        res.send({
+          totalAmount,
+          amountPaid,
+          amountDue,
+          payments: result,
+          events,
+        });
+      })
+      .catch((error) => res.status(400).send({ message: "error", error }));
   }
 };
 
@@ -358,16 +364,42 @@ const GetAllTransactions = (req, res) => {
 };
 
 const GetInvoice = (req, res) => {
-  // const { user_id } = req.auth;
   const { _id } = req.params;
   if (_id) {
     Payment.findOne({ _id })
       .populate("user event")
       .exec()
-      .then((result) => {
+      .then(async (result) => {
         if (result) {
           try {
-            createInvoice(result, res);
+            let payments = await Payment.find({
+              user: result.user?._id,
+              event: result.event?._id,
+              createdAt: { $lt: result?.createdAt },
+              status: "paid",
+            }).exec();
+            let event = result?.event?.toObject();
+            let { total, paid, due } = event.amount;
+            let received = payments
+              .filter((p) => p?.status === "paid")
+              .reduce((accumulator, e) => {
+                return accumulator + e.amountPaid / 100;
+              }, 0);
+            received += result.amountPaid / 100;
+            let transactions = result.transactions || [];
+            if (result.paymentMethod !== "cash" && transactions.length == 0) {
+              transactions = await GetPaymentTransactions({
+                order_id: result?.razporPayId,
+              });
+            }
+            createInvoice(
+              {
+                ...result.toObject(),
+                stats: { total, paid, due, received },
+                transactions,
+              },
+              res
+            );
           } catch (error) {
             res.status(400).send({ message: "error_try", error });
           }
