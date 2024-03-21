@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const Payment = require("../models/Payment");
+const { createInvoice } = require("../utils/invoice");
 const {
   CreatePayment,
   GetPaymentStatus,
@@ -356,9 +357,36 @@ const GetAllTransactions = (req, res) => {
   }
 };
 
+const GetInvoice = (req, res) => {
+  // const { user_id } = req.auth;
+  const { _id } = req.params;
+  if (_id) {
+    Payment.findOne({ _id })
+      .populate("user event")
+      .exec()
+      .then((result) => {
+        if (result) {
+          try {
+            createInvoice(result, res);
+          } catch (error) {
+            res.status(400).send({ message: "error_try", error });
+          }
+        } else {
+          res.status(404).send({ message: "Invoice not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else {
+    res.status(400).send({ message: "error" });
+  }
+};
+
 module.exports = {
   CreateNewPayment,
   UpdatePayment,
   GetAllPayments,
   GetAllTransactions,
+  GetInvoice,
 };
