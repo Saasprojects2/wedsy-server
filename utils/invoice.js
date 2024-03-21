@@ -82,6 +82,10 @@ function generateInvoiceTable(doc, payment) {
   try {
     let i;
     let invoiceTableTop = 300;
+    doc
+      .rect(50, invoiceTableTop - 5, 512, 20)
+      .fill("#d9d9d9")
+      .fillColor("#444444");
 
     doc.font("Helvetica-Bold");
     generateTableRow(doc, invoiceTableTop, [
@@ -94,6 +98,7 @@ function generateInvoiceTable(doc, payment) {
       "Total",
     ]);
     doc.font("Helvetica");
+
     let eventDays = payment?.event?.eventDays;
     let summary = payment?.event?.amount?.summary;
 
@@ -144,7 +149,8 @@ function generateInvoiceTable(doc, payment) {
       .text(`${payment?.event?.amount?.total}`, 501.6, invoiceTableTop, {
         width: 60.4,
         align: "center",
-      });
+      })
+      .font("Helvetica");
     invoiceTableTop = invoiceTableTop + 20;
     doc
       .strokeColor("#aaaaaa")
@@ -152,6 +158,7 @@ function generateInvoiceTable(doc, payment) {
       .rect(50, invoiceTableTop - 5, 512, 30)
       .stroke()
       .text("Amount in words", 60, invoiceTableTop)
+      .font("Helvetica-Bold")
       .text(
         `${toProperCase(convertAmountToWords(payment?.event?.amount?.total))}`,
         60,
@@ -162,7 +169,7 @@ function generateInvoiceTable(doc, payment) {
       .font("Helvetica")
       .text(`Amount paid till date: `, 50, invoiceTableTop, { continued: true })
       .font("Helvetica-Bold")
-      .text(`${payment?.event?.amount?.paid}`);
+      .text(`${payment?.stats?.received}`);
     invoiceTableTop = invoiceTableTop + 15;
     doc
       .font("Helvetica")
@@ -183,7 +190,7 @@ function generateInvoiceTable(doc, payment) {
         continued: true,
       })
       .font("Helvetica-Bold")
-      .text(`${payment?.event?.amount?.due}`);
+      .text(`${payment?.event?.amount?.total - payment?.stats?.received}`);
     invoiceTableTop = invoiceTableTop + 15;
     doc
       .font("Helvetica")
@@ -191,7 +198,13 @@ function generateInvoiceTable(doc, payment) {
         continued: true,
       })
       .font("Helvetica-Bold")
-      .text(`${payment?.paymentMethod === "cash" ? "Cash" : "Online"}`);
+      .text(
+        `${toProperCase(
+          payment?.paymentMethod === "cash"
+            ? "cash"
+            : payment?.transactions[0]?.method?.split("_").join(" ") || ""
+        )}`
+      );
     invoiceTableTop = invoiceTableTop + 15;
     generateHr(doc, invoiceTableTop);
     invoiceTableTop = invoiceTableTop + 80;
@@ -220,6 +233,7 @@ function generateTableRow(doc, y, data) {
     }
   }
   doc
+    .fillColor("#444444")
     .strokeColor("#aaaaaa")
     .lineWidth(1)
     .rect(columnStart[0], y - 5, availableWidth, 20)
@@ -232,6 +246,7 @@ function generateTableRow(doc, y, data) {
   }
   doc
     .fontSize(10)
+    .fillColor("#444444")
     .text(data[0], columnStart[0], y, {
       width: columnWidth[0],
       align: "center",
@@ -362,6 +377,14 @@ function convertAmountToWords(amount) {
   }
 }
 
+function formatDateString(dateString) {
+  let date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  return day + month + year;
+}
+
 function generateHr(doc, y) {
   doc
     .strokeColor("#aaaaaa")
@@ -400,7 +423,10 @@ function createInvoice(payment, res) {
       const contentLength = result.length;
       res.setHeader("Content-Length", contentLength);
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", 'inline; filename="invoice.pdf"');
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="invoice-${formatDateString(payment.createdAt)}.pdf"`
+      );
       res.status(200).end(result);
     });
     doc.on("error", (err) => {
