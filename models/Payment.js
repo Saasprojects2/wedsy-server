@@ -41,6 +41,7 @@ const PaymentSchema = new mongoose.Schema(
         "canceled",
       ],
     },
+    transactions: { type: Array, default: [] },
   },
   { timestamps: true }
 );
