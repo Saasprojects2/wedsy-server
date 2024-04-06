@@ -18,5 +18,16 @@ router.use("/payment", require("./payment"));
 router.use("/file", require("./file"));
 router.use("/quotation", require("./quotation"));
 router.use("/event-mandatory-question", require("./event-mandatory-question"));
+router.use("/label", require("./label"));
+router.use("/unit", require("./unit"));
+router.use("/raw-material", require("./raw-material"));
+router.use("/attribute", require("./attribute"));
+router.use("/add-on", require("./add-on"));
+router.use("/category", require("./category"));
+router.use("/coupon", require("./coupon"));
+router.use("/discount", require("./discount"));
+router.use("/taxation", require("./taxation"));
+router.use("/product-type", require("./product-type"));
+router.use("/pricing-variation", require("./pricing-variation"));
 
 module.exports = router;
