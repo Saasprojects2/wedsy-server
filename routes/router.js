@@ -29,5 +29,6 @@ router.use("/discount", require("./discount"));
 router.use("/taxation", require("./taxation"));
 router.use("/product-type", require("./product-type"));
 router.use("/pricing-variation", require("./pricing-variation"));
+router.use("/config", require("./config"));
 
 module.exports = router;
