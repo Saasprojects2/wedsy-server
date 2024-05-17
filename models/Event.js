@@ -21,6 +21,9 @@ const EventSchema = new mongoose.Schema(
                 decor: { type: ObjectId, ref: "Decor" },
                 platform: { type: Boolean, default: false },
                 flooring: { type: String, default: "" },
+                platformRate: { type: Number, default: 1 },
+                flooringRate: { type: Number, default: 1 },
+                decorPrice: { type: Number, default: 1 },
                 dimensions: {
                   length: { type: Number, default: 0 },
                   breadth: { type: Number, default: 0 },
@@ -78,6 +81,9 @@ const EventSchema = new mongoose.Schema(
                       decor: { type: ObjectId, ref: "Decor" },
                       platform: { type: Boolean, default: false },
                       flooring: { type: String, default: "" },
+                      platformRate: { type: Number, default: 1 },
+                      flooringRate: { type: Number, default: 1 },
+                      decorPrice: { type: Number, default: 1 },
                       dimensions: {
                         length: { type: Number, default: 0 },
                         breadth: { type: Number, default: 0 },

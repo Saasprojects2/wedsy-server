@@ -65,6 +65,7 @@ const GetAll = (req, res) => {
     priceLower,
     priceHigher,
     checkId,
+    getLastIdFor,
     label,
     spotlight,
     searchFor,
@@ -77,6 +78,18 @@ const GetAll = (req, res) => {
     Decor.find({ "productInfo.id": checkId })
       .then((result) => {
         res.send({ id: checkId, isValid: !Boolean(result.length) });
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
+  } else if (getLastIdFor) {
+    Decor.find({ category: getLastIdFor })
+      .sort({ "productInfo.id": -1 })
+      .then((result) => {
+        res.send({ id: result[0].productInfo.id, category: getLastIdFor });
       })
       .catch((error) => {
         res.status(400).send({

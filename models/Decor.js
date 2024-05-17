@@ -20,16 +20,20 @@ const DecorSchema = new mongoose.Schema(
       // enum: ["BestSeller", "Popular", ""],
       default: "",
     },
+    productVisibility: { type: Boolean, default: false },
+    productAvailability: { type: Boolean, default: false },
     spotlight: { type: Boolean, default: false },
     spotlightColor: { type: String, default: "" },
     name: { type: String, required: true },
     unit: { type: String, required: true },
     tags: { type: [String], required: true, default: [] },
     image: { type: String, required: true, default: "" },
+    additionalImages: { type: [String], default: [] },
     thumbnail: { type: String, required: true, default: "" },
     video: { type: String, default: "" },
     description: { type: String, default: "" },
     pdf: { type: String, default: "" },
+    attributes: { type: [{ name: String, list: [String] }], default: [] },
     productVariation: {
       colors: { type: [String], required: true, default: [] },
       occassion: { type: [String], required: true, default: [] },
@@ -72,12 +76,36 @@ const DecorSchema = new mongoose.Schema(
         },
       },
       quantity: { type: Number, required: true, default: 1 },
+      minimumOrderQuantity: { type: Number, required: true, default: 1 },
+      maximumOrderQuantity: { type: Number, required: true, default: 1 },
       SKU: { type: String, default: "" },
     },
+    rawMaterials: { type: [{ name: String, quantity: Number }], default: [] },
     seoTags: {
       title: { type: String, default: "" },
       description: { type: String, default: "" },
       image: { type: String, default: "" },
+    },
+    productVariants: {
+      type: [
+        {
+          name: { type: String, default: "" },
+          priceModifier: { type: Number, required: true, default: 0 },
+          image: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+    productTypes: {
+      type: [
+        {
+          name: { type: String, default: "" },
+          costPrice: { type: Number, required: true, default: 0 },
+          sellingPrice: { type: Number, required: true, default: 0 },
+          discount: { type: Number, required: true, default: 0 },
+        },
+      ],
+      default: [],
     },
   },
   { timestamps: true }

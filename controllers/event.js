@@ -315,9 +315,14 @@ const AddDecorInEventDay = (req, res) => {
     variant,
     quantity,
     unit,
+    platformRate,
+    flooringRate,
+    decorPrice,
   } = req.body;
   if (!decor || !category || !variant || !price || platform === undefined) {
-    res.status(400).send({ message: "Incomplete Data" });
+    res.status(400).send({
+      message: "Incomplete Data",
+    });
   } else {
     Event.findOneAndUpdate(
       isAdmin
@@ -335,6 +340,9 @@ const AddDecorInEventDay = (req, res) => {
             price,
             category,
             variant,
+            platformRate,
+            flooringRate,
+            decorPrice,
           },
         },
       }
