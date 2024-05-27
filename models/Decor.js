@@ -102,7 +102,7 @@ const DecorSchema = new mongoose.Schema(
           name: { type: String, default: "" },
           costPrice: { type: Number, required: true, default: 0 },
           sellingPrice: { type: Number, required: true, default: 0 },
-          discount: { type: Number, required: true, default: 0 },
+          discount: { type: Number, required: false, default: 0 },
         },
       ],
       default: [],
