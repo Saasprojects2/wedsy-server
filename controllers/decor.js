@@ -4,17 +4,23 @@ const CreateNew = (req, res) => {
   const {
     category,
     label,
+    productVisibility,
+    productAvailability,
     name,
     unit,
     tags,
+    additionalImages,
     image,
     thumbnail,
     video,
     description,
     pdf,
+    attributes,
     productVariation,
+    productTypes,
     productInfo,
     seoTags,
+    rawMaterials,
   } = req.body;
   if (!name || !category) {
     res.status(400).send({ message: "Incomplete Data" });
@@ -22,17 +28,23 @@ const CreateNew = (req, res) => {
     new Decor({
       category,
       label,
+      productVisibility,
+      productAvailability,
       name,
       unit,
       tags,
+      additionalImages,
       image,
       thumbnail,
       video,
       description,
       pdf,
+      attributes,
       productVariation,
+      productTypes,
       productInfo,
       seoTags,
+      rawMaterials,
     })
       .save()
       .then((result) => {
