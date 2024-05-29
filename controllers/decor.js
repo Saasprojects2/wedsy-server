@@ -85,6 +85,8 @@ const GetAll = (req, res) => {
     random,
     similarDecorFor,
     repeat,
+    displayVisible,
+    displayAvailable,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -148,7 +150,7 @@ const GetAll = (req, res) => {
     Decor.aggregate([
       {
         $match: {
-          _id: { $ne: similarDecorFor }, // Exclude the given product
+          _id: { $ne: similarDecorFor },
         },
       },
       // {
@@ -206,6 +208,12 @@ const GetAll = (req, res) => {
     }
     if (category) {
       query.category = category;
+    }
+    if (displayVisible === "true") {
+      query.productVisibility = true;
+    }
+    if (displayAvailable === "true") {
+      query.productAvailability = true;
     }
     if (search) {
       query.$or = [
@@ -301,7 +309,6 @@ const GetAll = (req, res) => {
         sortQuery["productInfo.variant.artificialFlowers.sellingPrice"] = -1;
       }
     }
-
     Decor.countDocuments(query)
       .then((total) => {
         const totalPages = Math.ceil(total / limit);
@@ -357,7 +364,7 @@ const GetAll = (req, res) => {
 };
 
 const Get = (req, res) => {
-  const { _id } = req.params;
+  const { _id, displayVisible, displayAvailable } = req.params;
   Decor.findById({ _id })
     .then((result) => {
       if (!result) {
