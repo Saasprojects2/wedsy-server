@@ -4,6 +4,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const EventSchema = new mongoose.Schema(
   {
     user: { type: ObjectId, ref: "User", required: true },
+    eventAccess: { type: [String], default: [] },
     name: { type: String, required: true },
     community: { type: String, default: "" },
     eventDays: {
