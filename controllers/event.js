@@ -1054,6 +1054,48 @@ const SendEventBookingReminder = (req, res) => {
     });
 };
 
+const AddEventAccess = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id } = req.params;
+  const { phone } = req.body;
+  Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
+    $addToSet: {
+      eventAccess: phone,
+    },
+  })
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
+const RemoveEventAccess = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id } = req.params;
+  const { phone } = req.body;
+  Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
+    $pull: {
+      eventAccess: phone,
+    },
+  })
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
 module.exports = {
   CreateNew,
   Update,
@@ -1080,4 +1122,6 @@ module.exports = {
   ApproveEventDay,
   SendEventToClient,
   SendEventBookingReminder,
+  AddEventAccess,
+  RemoveEventAccess,
 };
