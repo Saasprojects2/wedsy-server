@@ -373,8 +373,48 @@ const Get = (req, res) => {
 
 const Update = (req, res) => {
   const { _id } = req.params;
-  const { addTo, removeFrom } = req.query;
-  if (addTo === "spotlight") {
+  const { addTo, removeFrom, updateKey } = req.query;
+  if (updateKey && updateKey === "productAvailability") {
+    const { productAvailability } = req.body;
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          productAvailability,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (updateKey && updateKey === "productVisibility") {
+    const { productVisibility } = req.body;
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          productVisibility,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (addTo === "spotlight") {
     const { spotlightColor } = req.body;
     Decor.findByIdAndUpdate(
       { _id },
