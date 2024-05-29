@@ -75,5 +75,7 @@ router.put(
   CheckAdminLogin,
   event.UpdateMandatoryItemsInEventDay
 );
+router.post("/:_id/event-access", CheckLogin, event.AddEventAccess);
+router.delete("/:_id/event-access", CheckLogin, event.RemoveEventAccess);
 
 module.exports = router;
