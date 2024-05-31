@@ -34,19 +34,10 @@ const EventSchema = new mongoose.Schema(
                 category: {
                   type: String,
                   required: true,
-                  // enum: [
-                  //   "Stage",
-                  //   "Pathway",
-                  //   "Entrance",
-                  //   "Photobooth",
-                  //   "Mandap",
-                  //   "Nameboard",
-                  // ],
                 },
                 variant: {
                   type: String,
                   required: true,
-                  // enum: ["artificialFlowers", "naturalFlowers", "mixedFlowers"],
                 },
                 user_notes: { type: String, default: "" },
                 admin_notes: { type: String, default: "" },
