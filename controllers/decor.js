@@ -4,6 +4,7 @@ const CreateNew = (req, res) => {
   const {
     category,
     label,
+    rating,
     productVisibility,
     productAvailability,
     name,
@@ -28,6 +29,7 @@ const CreateNew = (req, res) => {
     new Decor({
       category,
       label,
+      rating,
       productVisibility,
       productAvailability,
       name,
@@ -503,17 +505,24 @@ const Update = (req, res) => {
     const {
       category,
       label,
+      rating,
+      productVisibility,
+      productAvailability,
       name,
       unit,
       tags,
+      additionalImages,
       image,
       thumbnail,
       video,
       description,
       pdf,
+      attributes,
       productVariation,
+      productTypes,
       productInfo,
       seoTags,
+      rawMaterials,
     } = req.body;
     if (!name || !category) {
       res.status(400).send({ message: "Incomplete Data" });
@@ -524,17 +533,24 @@ const Update = (req, res) => {
           $set: {
             category,
             label,
+            rating,
+            productVisibility,
+            productAvailability,
             name,
             unit,
             tags,
+            additionalImages,
             image,
             thumbnail,
             video,
             description,
             pdf,
+            attributes,
             productVariation,
+            productTypes,
             productInfo,
             seoTags,
+            rawMaterials,
           },
         }
       )
