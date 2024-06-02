@@ -20,6 +20,7 @@ const DecorSchema = new mongoose.Schema(
       // enum: ["BestSeller", "Popular", ""],
       default: "",
     },
+    rating: { type: Number, default: 0, required: true },
     productVisibility: { type: Boolean, default: false },
     productAvailability: { type: Boolean, default: false },
     spotlight: { type: Boolean, default: false },
