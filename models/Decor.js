@@ -5,14 +5,6 @@ const DecorSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: [
-        "Stage",
-        "Pathway",
-        "Entrance",
-        "Photobooth",
-        "Mandap",
-        "Nameboard",
-      ],
     },
     label: {
       type: String,
