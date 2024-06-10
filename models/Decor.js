@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const DecorSchema = new mongoose.Schema(
   {
@@ -98,6 +99,11 @@ const DecorSchema = new mongoose.Schema(
           discount: { type: Number, required: false, default: 0 },
         },
       ],
+      default: [],
+    },
+    productAddOns: {
+      type: [ObjectId],
+      ref: "AddOn",
       default: [],
     },
   },

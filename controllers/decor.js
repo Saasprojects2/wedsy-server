@@ -23,6 +23,7 @@ const CreateNew = (req, res) => {
     productInfo,
     seoTags,
     rawMaterials,
+    productAddOns,
   } = req.body;
   if (!name || !category) {
     res.status(400).send({ message: "Incomplete Data" });
@@ -49,6 +50,7 @@ const CreateNew = (req, res) => {
       productInfo,
       seoTags,
       rawMaterials,
+      productAddOns,
     })
       .save()
       .then((result) => {
@@ -368,18 +370,35 @@ const GetAll = (req, res) => {
 };
 
 const Get = (req, res) => {
-  const { _id, displayVisible, displayAvailable } = req.params;
-  Decor.findById({ _id })
-    .then((result) => {
-      if (!result) {
-        res.status(404).send();
-      } else {
-        res.send(result);
-      }
-    })
-    .catch((error) => {
-      res.status(400).send({ message: "error", error });
-    });
+  const { _id } = req.params;
+  const { displayVisible, displayAvailable, populate } = req.query;
+  if (populate) {
+    Decor.findById({ _id })
+      .populate(populate)
+      .exec()
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send(result);
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else {
+    Decor.findById({ _id })
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send(result);
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
 };
 
 const Update = (req, res) => {
@@ -526,6 +545,7 @@ const Update = (req, res) => {
       productInfo,
       seoTags,
       rawMaterials,
+      productAddOns,
     } = req.body;
     if (!name || !category) {
       res.status(400).send({ message: "Incomplete Data" });
@@ -555,6 +575,7 @@ const Update = (req, res) => {
             productInfo,
             seoTags,
             rawMaterials,
+            productAddOns,
           },
         }
       )
