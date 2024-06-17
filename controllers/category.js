@@ -12,6 +12,7 @@ const CreateNew = (req, res) => {
     platformAllowed,
     flooringAllowed,
     multipleAllowed,
+    adminEventToolView,
   } = req.body;
   if (!name) {
     res.status(400).send({ message: "Incomplete Data" });
@@ -27,6 +28,7 @@ const CreateNew = (req, res) => {
       platformAllowed,
       flooringAllowed,
       multipleAllowed,
+      adminEventToolView,
     })
       .save()
       .then((result) => {
@@ -92,6 +94,7 @@ const Update = (req, res) => {
     platformAllowed,
     flooringAllowed,
     multipleAllowed,
+    adminEventToolView,
   } = req.body;
   if (!name) {
     res.status(400).send({ message: "Incomplete Data" });
@@ -110,6 +113,7 @@ const Update = (req, res) => {
           platformAllowed,
           flooringAllowed,
           multipleAllowed,
+          adminEventToolView,
         },
       }
     )

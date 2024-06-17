@@ -60,6 +60,10 @@ const CategorySchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    adminEventToolView: {
+      type: String,
+      enum: ["single", "group"],
+    },
   },
   { timestamps: true }
 );
