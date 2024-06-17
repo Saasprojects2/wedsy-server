@@ -93,6 +93,8 @@ const GetAll = (req, res) => {
     repeat,
     displayVisible,
     displayAvailable,
+    productVisibility,
+    productAvailability,
   } = req.query;
   if (checkId) {
     Decor.find({ "productInfo.id": checkId })
@@ -221,6 +223,16 @@ const GetAll = (req, res) => {
     if (displayAvailable === "true") {
       query.productAvailability = true;
     }
+    if (productVisibility === "true") {
+      query.productVisibility = true;
+    } else if (productVisibility === "false") {
+      query.productVisibility = false;
+    }
+    if (productAvailability === "true") {
+      query.productAvailability = true;
+    } else if (productAvailability === "false") {
+      query.productAvailability = false;
+    }
     if (search) {
       query.$or = [
         { name: { $regex: new RegExp(search, "i") } },
@@ -291,74 +303,49 @@ const GetAll = (req, res) => {
       query["productVariation.style"] = style;
     }
     if (priceLower && priceHigher) {
-      query["productInfo.variant.artificialFlowers.sellingPrice"] = {
+      query["productTypes.sellingPrice"] = {
         $gte: priceLower,
         $lte: priceHigher,
       };
-      query["productInfo.variant.mixedFlowers.sellingPrice"] = {
-        $gte: priceLower,
-        $lte: priceHigher,
-      };
-      query["productInfo.variant.naturalFlowers.sellingPrice"] = {
-        $gte: priceLower,
-        $lte: priceHigher,
-      };
-      // } else if (priceLower) {
-      //   query["productInfo.sellingPrice"] = { $gte: priceLower };
-      // } else if (priceHigher) {
-      //   query["productInfo.sellingPrice"] = { $lte: priceHigher };
     }
     if (sort) {
       if (sort === "Price:Low-to-High") {
-        sortQuery["productInfo.variant.artificialFlowers.sellingPrice"] = 1;
+        sortQuery["productTypes.sellingPrice"] = 1;
       } else if (sort === "Price:High-to-Low") {
-        sortQuery["productInfo.variant.artificialFlowers.sellingPrice"] = -1;
+        sortQuery["productTypes.sellingPrice"] = -1;
+      } else if (sort === "Newest-First") {
+        sortQuery["createdAt"] = -1;
+      } else if (sort === "Oldest-First") {
+        sortQuery["createdAt"] = 1;
+      } else if (sort === "Alphabetical:A-to-Z") {
+        sortQuery["name"] = 1;
+      } else if (sort === "Alphabetical:Z-to-A") {
+        sortQuery["name"] = -1;
       }
     }
     Decor.countDocuments(query)
       .then((total) => {
-        const totalPages = Math.ceil(total / limit);
-        const validPage = page % totalPages;
-        let skip = 0;
-        if (repeat === "false") {
-          skip =
-            page === 0 || page === null || page === undefined
-              ? 0
-              : (page - 1) * limit;
-          Decor.find(query)
-            .sort(sortQuery)
-            .skip(skip)
-            .limit(limit)
-            .exec()
-            .then((result) => {
-              res.send({ list: result, totalPages, page, limit });
-            })
-            .catch((error) => {
-              res.status(400).send({
-                message: "error",
-                error,
-              });
-            });
-        } else {
-          skip =
-            validPage === 0 || validPage === null || validPage === undefined
-              ? 0
-              : (validPage - 1) * limit;
-          Decor.find(query)
-            .sort(sortQuery)
-            .skip(skip)
-            .limit(limit)
-            .exec()
-            .then((result) => {
-              res.send({ list: result, totalPages, page, limit });
-            })
-            .catch((error) => {
-              res.status(400).send({
-                message: "error",
-                error,
-              });
-            });
+        let totalPages = Math.ceil(total / limit);
+        let validPage = page;
+        validPage = validPage < 1 ? 1 : validPage;
+        if (repeat !== "false") {
+          validPage = ((page - 1 + totalPages) % totalPages) + 1;
         }
+        let skip = (validPage - 1) * limit;
+        Decor.find(query)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limit)
+          .exec()
+          .then((result) => {
+            res.send({ list: result, totalPages, page, limit });
+          })
+          .catch((error) => {
+            res.status(400).send({
+              message: "error",
+              error,
+            });
+          });
       })
       .catch((error) => {
         res.status(400).send({
@@ -431,6 +418,26 @@ const Update = (req, res) => {
       {
         $set: {
           productVisibility,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (updateKey && updateKey === "label") {
+    const { label } = req.body;
+    Decor.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          label,
         },
       }
     )
