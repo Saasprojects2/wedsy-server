@@ -30,5 +30,6 @@ router.use("/taxation", require("./taxation"));
 router.use("/product-type", require("./product-type"));
 router.use("/pricing-variation", require("./pricing-variation"));
 router.use("/config", require("./config"));
+router.use("/task", require("./task"));
 
 module.exports = router;
