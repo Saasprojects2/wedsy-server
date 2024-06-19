@@ -520,11 +520,30 @@ const GetAll = async (req, res) => {
     } else {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
-      const { search, sort, status } = req.query;
+      const {
+        search,
+        sort,
+        status,
+        community,
+        eventType,
+        startDate,
+        endDate,
+        eventDate,
+      } = req.query;
       const query = {};
       const sortQuery = {};
+      if (community) {
+        query.community = community;
+      }
+      if (eventType) {
+        query.eventType = eventType;
+      }
       if (search) {
-        query.$or = [{ name: { $regex: new RegExp(search, "i") } }];
+        query.$or = [
+          { name: { $regex: new RegExp(search, "i") } },
+          { venue: { $regex: new RegExp(search, "i") } },
+          { community: { $regex: new RegExp(search, "i") } },
+        ];
         query.$or.push({
           user: {
             $in: await User.find({
@@ -558,13 +577,55 @@ const GetAll = async (req, res) => {
           query["status.approved"] = true;
           query["status.paymentDone"] = true;
           query["status.completed"] = true;
+        } else if (status === "Booked") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = false;
+          query.$expr = {
+            $eq: ["$amount.paid", { $multiply: ["$amount.total", 0.2] }],
+          };
+        } else if (status === "Partially Paid") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = false;
+          query.$and = [
+            {
+              $expr: {
+                $gt: ["$amount.paid", { $multiply: ["$amount.total", 0.2] }],
+              },
+            },
+            {
+              $expr: {
+                $lt: ["$amount.paid", "$amount.total"],
+              },
+            },
+          ];
+        } else if (status === "Completely Paid") {
+          query["status.finalized"] = true;
+          query["status.approved"] = true;
+          query["status.paymentDone"] = true;
+          query.$expr = {
+            $eq: ["$amount.paid", "$amount.total"],
+          };
+        } else if (status === "Event Lost") {
+          query["status.lost"] = true;
         }
+      }
+      if (eventDate) {
+        query["eventDays.date"] = eventDate;
+      }
+      if (startDate && endDate) {
+        query["eventDays.date"] = { $gt: startDate, $lt: endDate };
       }
       if (sort) {
         if (sort === "Newest (Creation)") {
           sortQuery.createdAt = -1;
         } else if (sort === "Older (Creation)") {
           sortQuery.createdAt = 1;
+        } else if (sort === "Closest (Event Date)") {
+          sortQuery["eventDays.date"] = 1;
+        } else if (sort === "Farthest (Event Date)") {
+          sortQuery["eventDays.date"] = -1;
         }
       } else {
         sortQuery.createdAt = -1;
@@ -1096,7 +1157,23 @@ const RemoveEventAccess = (req, res) => {
     });
 };
 
+const DeleteEvents = (req, res) => {
+  const { eventIds } = req.body;
+  Event.deleteMany({ _id: { $in: eventIds } })
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ message: "success" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
+};
+
 module.exports = {
+  DeleteEvents,
   CreateNew,
   Update,
   GetAll,

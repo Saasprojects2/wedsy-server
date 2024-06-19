@@ -21,6 +21,7 @@ router.get(
   },
   event.Get
 );
+router.delete("/", CheckAdminLogin, event.DeleteEvents);
 router.put("/:_id", CheckLogin, event.Update);
 router.post("/:_id/send", CheckAdminLogin, event.SendEventToClient);
 router.post(
