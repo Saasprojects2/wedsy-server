@@ -7,6 +7,8 @@ const EventSchema = new mongoose.Schema(
     eventAccess: { type: [String], default: [] },
     name: { type: String, required: true },
     community: { type: String, default: "" },
+    lostResponse: { type: String, default: "" },
+    eventType: { type: String, default: "" },
     eventDays: {
       type: [
         {
@@ -162,6 +164,7 @@ const EventSchema = new mongoose.Schema(
       approved: { type: Boolean, default: false },
       paymentDone: { type: Boolean, default: false },
       completed: { type: Boolean, default: false },
+      lost: { type: Boolean, default: false },
     },
     amount: {
       total: { type: Number, required: true, default: 0 },
