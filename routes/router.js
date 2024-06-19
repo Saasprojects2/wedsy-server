@@ -31,5 +31,8 @@ router.use("/product-type", require("./product-type"));
 router.use("/pricing-variation", require("./pricing-variation"));
 router.use("/config", require("./config"));
 router.use("/task", require("./task"));
+router.use("/event-community", require("./event-community"));
+router.use("/event-type", require("./event-type"));
+router.use("/event-lost-response", require("./event-lost-response"));
 
 module.exports = router;
