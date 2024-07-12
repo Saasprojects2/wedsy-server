@@ -8,6 +8,7 @@ const EventSchema = new mongoose.Schema(
     name: { type: String, required: true },
     community: { type: String, default: "" },
     lostResponse: { type: String, default: "" },
+    eventNotes: { type: String, default: "" },
     eventType: { type: String, default: "" },
     eventDays: {
       type: [
@@ -43,6 +44,15 @@ const EventSchema = new mongoose.Schema(
                 },
                 user_notes: { type: String, default: "" },
                 admin_notes: { type: String, default: "" },
+                notes: {
+                  type: [
+                    {
+                      text: { type: String, default: "" },
+                      image: { type: String, default: "" },
+                    },
+                  ],
+                  default: [],
+                },
                 addOns: {
                   type: [
                     {
@@ -54,6 +64,9 @@ const EventSchema = new mongoose.Schema(
                   default: [],
                 },
                 included: { type: [String], default: [] },
+                primaryColor: { type: String, default: "" },
+                secondaryColor: { type: String, default: "" },
+                setupLocationImage: { type: String, default: "" },
               },
             ],
             default: [],
@@ -118,6 +131,7 @@ const EventSchema = new mongoose.Schema(
                   default: false,
                   required: true,
                 },
+                setupLocationImage: { type: String, default: "" },
               },
             ],
             default: [],

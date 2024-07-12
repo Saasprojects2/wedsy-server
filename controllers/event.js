@@ -27,10 +27,20 @@ const CreateNew = (req, res) => {
 const Update = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
-  const { name, community } = req.body;
-  if (!name || !community) {
+  const { name, community, eventNotes } = req.body;
+  if (!eventNotes && !(name && community)) {
     res.status(400).send({ message: "Incomplete Data" });
-  } else {
+  } else if (eventNotes) {
+    Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
+      eventNotes,
+    })
+      .then((result) => {
+        res.status(200).send({ message: "success" });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (name && community) {
     Event.findOneAndUpdate(isAdmin ? { _id } : { _id, user: user_id }, {
       name,
       community,
@@ -41,6 +51,8 @@ const Update = (req, res) => {
       .catch((error) => {
         res.status(400).send({ message: "error", error });
       });
+  } else {
+    res.status(400).send({ message: "Incomplete Data" });
   }
 };
 
@@ -142,7 +154,8 @@ const DeleteEventDay = (req, res) => {
 const UpdateNotes = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id, eventDay } = req.params;
-  const { user, decor_id, package_id, admin_notes, user_notes } = req.body;
+  const { user, decor_id, package_id, admin_notes, user_notes, notes } =
+    req.body;
   if (!decor_id && !package_id) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
@@ -160,6 +173,7 @@ const UpdateNotes = (req, res) => {
             ? {
                 "eventDays.$[].decorItems.$[x].admin_notes": admin_notes,
                 "eventDays.$[].decorItems.$[x].user_notes": user_notes,
+                "eventDays.$[].decorItems.$[x].notes": notes,
               }
             : {
                 "eventDays.$[].decorItems.$[x].user_notes": user_notes,
@@ -360,6 +374,62 @@ const AddDecorInEventDay = (req, res) => {
   }
 };
 
+const EditDecorInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const {
+    decor_id,
+    platform,
+    flooring,
+    dimensions,
+    price,
+    category,
+    variant,
+    quantity,
+    unit,
+    platformRate,
+    flooringRate,
+    decorPrice,
+  } = req.body;
+  if (!decor_id || !category || !variant || !price || platform === undefined) {
+    res.status(400).send({
+      message: "Incomplete Data",
+    });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].price": price,
+          "eventDays.$[].decorItems.$[x].quantity": quantity,
+          "eventDays.$[].decorItems.$[x].unit": unit,
+          "eventDays.$[].decorItems.$[x].platform": platform,
+          "eventDays.$[].decorItems.$[x].flooring": flooring,
+          "eventDays.$[].decorItems.$[x].dimensions": dimensions,
+          "eventDays.$[].decorItems.$[x].category": category,
+          "eventDays.$[].decorItems.$[x].variant": variant,
+          "eventDays.$[].decorItems.$[x].platformRate": platformRate,
+          "eventDays.$[].decorItems.$[x].flooringRate": flooringRate,
+          "eventDays.$[].decorItems.$[x].decorPrice": decorPrice,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const EditDecorAddOnsInEventDay = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id, dayId } = req.params;
@@ -375,6 +445,131 @@ const EditDecorAddOnsInEventDay = (req, res) => {
         $set: {
           "eventDays.$[].decorItems.$[x].addOns": addOns,
           "eventDays.$[].decorItems.$[x].price": price,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const EditDecorIncludedInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor_id, included } = req.body;
+  if (!decor_id || included === undefined) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].included": included,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const EditDecorSetupLocationImageInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor_id, setupLocationImage } = req.body;
+  if (!decor_id || !setupLocationImage) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].setupLocationImage":
+            setupLocationImage,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const EditDecorPrimaryColorInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor_id, primaryColor } = req.body;
+  if (!decor_id || !primaryColor) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].primaryColor": primaryColor,
+        },
+      },
+      { arrayFilters: [{ "x.decor": decor_id }] }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const EditDecorSecondaryColorInEventDay = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, dayId } = req.params;
+  const { decor_id, secondaryColor } = req.body;
+  if (!decor_id || !secondaryColor) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": dayId }
+        : { _id, user: user_id, "eventDays._id": dayId },
+      {
+        $set: {
+          "eventDays.$[].decorItems.$[x].secondaryColor": secondaryColor,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -672,6 +867,38 @@ const GetAll = async (req, res) => {
         });
       });
   }
+};
+
+const MarkEventLost = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id } = req.params;
+  const { lostResponse } = req.body;
+  Event.findOneAndUpdate(
+    isAdmin
+      ? {
+          _id,
+        }
+      : {
+          _id,
+          user: user_id,
+        },
+    {
+      $set: {
+        "status.lost": true,
+        lostResponse,
+      },
+    }
+  )
+    .then((result) => {
+      if (result) {
+        res.status(200).send({ message: "success" });
+      } else {
+        res.status(404).send({ message: "Event not found" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({ message: "error", error });
+    });
 };
 
 const FinalizeEventDay = (req, res) => {
@@ -1180,7 +1407,12 @@ module.exports = {
   Get,
   AddEventDay,
   AddDecorInEventDay,
+  EditDecorInEventDay,
   EditDecorAddOnsInEventDay,
+  EditDecorIncludedInEventDay,
+  EditDecorSetupLocationImageInEventDay,
+  EditDecorPrimaryColorInEventDay,
+  EditDecorSecondaryColorInEventDay,
   RemoveDecorInEventDay,
   AddDecorPackageInEventDay,
   RemoveDecorPackageInEventDay,
@@ -1201,4 +1433,5 @@ module.exports = {
   SendEventBookingReminder,
   AddEventAccess,
   RemoveEventAccess,
+  MarkEventLost,
 };

@@ -34,10 +34,31 @@ router.put("/:_id/eventDay/:eventDay", CheckLogin, event.UpdateEventDay);
 router.delete("/:_id/eventDay/:eventDay", CheckLogin, event.DeleteEventDay);
 router.put("/:_id/eventDay/:eventDay/notes", CheckLogin, event.UpdateNotes);
 router.post("/:_id/decor/:dayId", CheckLogin, event.AddDecorInEventDay);
+router.put("/:_id/decor/:dayId", CheckLogin, event.EditDecorInEventDay);
 router.put(
   "/:_id/decor/:dayId/add-ons",
   CheckLogin,
   event.EditDecorAddOnsInEventDay
+);
+router.put(
+  "/:_id/decor/:dayId/included",
+  CheckLogin,
+  event.EditDecorIncludedInEventDay
+);
+router.put(
+  "/:_id/decor/:dayId/setup-location-image",
+  CheckLogin,
+  event.EditDecorSetupLocationImageInEventDay
+);
+router.put(
+  "/:_id/decor/:dayId/primary-color",
+  CheckLogin,
+  event.EditDecorPrimaryColorInEventDay
+);
+router.put(
+  "/:_id/decor/:dayId/secondary-color",
+  CheckLogin,
+  event.EditDecorSecondaryColorInEventDay
 );
 router.delete("/:_id/decor/:dayId", CheckLogin, event.RemoveDecorInEventDay);
 router.post(
@@ -78,5 +99,6 @@ router.put(
 );
 router.post("/:_id/event-access", CheckLogin, event.AddEventAccess);
 router.delete("/:_id/event-access", CheckLogin, event.RemoveEventAccess);
+router.post("/:_id/lost", CheckAdminLogin, event.MarkEventLost);
 
 module.exports = router;
