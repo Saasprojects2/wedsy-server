@@ -34,5 +34,10 @@ router.use("/task", require("./task"));
 router.use("/event-community", require("./event-community"));
 router.use("/event-type", require("./event-type"));
 router.use("/event-lost-response", require("./event-lost-response"));
+router.use("/lead-lost-response", require("./lead-lost-response"));
+router.use("/lead-interest", require("./lead-interest"));
+router.use("/lead-source", require("./lead-source"));
+router.use("/color", require("./color"));
+router.use("/quantity", require("./quantity"));
 
 module.exports = router;
