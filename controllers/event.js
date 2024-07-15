@@ -810,7 +810,7 @@ const GetAll = async (req, res) => {
         query["eventDays.date"] = eventDate;
       }
       if (startDate && endDate) {
-        query["eventDays.date"] = { $gt: startDate, $lt: endDate };
+        query["eventDays.date"] = { $gte: startDate, $lte: endDate };
       }
       if (sort) {
         if (sort === "Newest (Creation)") {
