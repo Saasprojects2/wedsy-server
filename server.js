@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
+const cron = require("node-cron");
 require("dotenv").config();
+const { EventCompletionChecker } = require("./utils/jobs");
 
 //Creating Express App
 const app = express();
@@ -36,4 +38,12 @@ if (port == null || port == "") {
 }
 app.listen(port, function () {
   console.log(`--App listening on port ${port}`);
+  // EventCompletionChecker();
+  // Corn Jobs
+  cron.schedule("0 10 * * *", () => {
+    console.log(
+      "This function will run at 10 AM every day according to the local timezone"
+    );
+    EventCompletionChecker();
+  });
 });
