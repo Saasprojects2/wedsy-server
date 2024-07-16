@@ -64,6 +64,10 @@ const CategorySchema = new mongoose.Schema(
       type: String,
       enum: ["single", "group"],
     },
+    websiteView: {
+      type: String,
+      enum: ["multiple", "single"],
+    },
   },
   { timestamps: true }
 );
