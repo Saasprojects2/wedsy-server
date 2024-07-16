@@ -332,6 +332,7 @@ const AddDecorInEventDay = (req, res) => {
     platformRate,
     flooringRate,
     decorPrice,
+    included,
   } = req.body;
   if (!decor || !category || !variant || !price || platform === undefined) {
     res.status(400).send({
@@ -357,6 +358,7 @@ const AddDecorInEventDay = (req, res) => {
             platformRate,
             flooringRate,
             decorPrice,
+            included,
           },
         },
       }
