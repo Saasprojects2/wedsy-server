@@ -333,6 +333,8 @@ const AddDecorInEventDay = (req, res) => {
     flooringRate,
     decorPrice,
     included,
+    productVariant,
+    priceModifier,
   } = req.body;
   if (!decor || !category || !variant || !price || platform === undefined) {
     res.status(400).send({
@@ -359,6 +361,8 @@ const AddDecorInEventDay = (req, res) => {
             flooringRate,
             decorPrice,
             included,
+            productVariant,
+            priceModifier,
           },
         },
       }
@@ -392,6 +396,8 @@ const EditDecorInEventDay = (req, res) => {
     platformRate,
     flooringRate,
     decorPrice,
+    productVariant,
+    priceModifier,
   } = req.body;
   if (!decor_id || !category || !variant || !price || platform === undefined) {
     res.status(400).send({
@@ -415,6 +421,8 @@ const EditDecorInEventDay = (req, res) => {
           "eventDays.$[].decorItems.$[x].platformRate": platformRate,
           "eventDays.$[].decorItems.$[x].flooringRate": flooringRate,
           "eventDays.$[].decorItems.$[x].decorPrice": decorPrice,
+          "eventDays.$[].decorItems.$[x].productVariant": productVariant,
+          "eventDays.$[].decorItems.$[x].priceModifier": priceModifier,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
