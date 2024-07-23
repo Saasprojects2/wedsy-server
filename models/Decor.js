@@ -103,7 +103,7 @@ const DecorSchema = new mongoose.Schema(
     },
     productAddOns: {
       type: [ObjectId],
-      ref: "AddOn",
+      ref: "Decor",
       default: [],
     },
   },
