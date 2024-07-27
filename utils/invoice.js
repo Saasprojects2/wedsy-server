@@ -200,14 +200,23 @@ function generateInvoiceTable(doc, payment) {
       .font("Helvetica-Bold")
       .text(
         `${toProperCase(
-          payment?.paymentMethod === "cash"
-            ? "cash"
+          ["cash", "upi", "bank-transfer"].includes(payment?.paymentMethod)
+            ? payment?.paymentMethod?.replace("-", " ")
             : payment?.transactions[0]?.method?.split("_").join(" ") || ""
         )}`
       );
     invoiceTableTop = invoiceTableTop + 15;
     generateHr(doc, invoiceTableTop);
-    invoiceTableTop = invoiceTableTop + 80;
+    invoiceTableTop = invoiceTableTop + 30;
+    doc.image(
+      path.join(__dirname, "../assets/signature.png"),
+      doc.page.width - doc.page.margins.right - 80,
+      invoiceTableTop,
+      {
+        width: 80,
+      }
+    );
+    invoiceTableTop = invoiceTableTop + 60;
     doc.font("Helvetica").text(`Authorised Signatory`, 50, invoiceTableTop, {
       align: "right",
     });
