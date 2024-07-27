@@ -43,7 +43,7 @@ const CreateNewPayment = (req, res) => {
     event &&
     user &&
     isAdmin &&
-    paymentMethod === "cash"
+    ["cash", "upi", "bank-transfer"].includes(paymentMethod)
   ) {
     new Payment({
       user: user,
@@ -324,7 +324,7 @@ const GetAllPayments = async (req, res) => {
         let transactions = item.transactions || [];
         if (
           item?.razporPayId &&
-          item?.paymentMethod !== "cash" &&
+          !["cash", "upi", "bank-transfer"].includes(item?.paymentMethod) &&
           transactions.length == 0
         ) {
           transactions = await GetPaymentTransactions({
@@ -387,7 +387,12 @@ const GetInvoice = (req, res) => {
               }, 0);
             received += result.amountPaid / 100;
             let transactions = result.transactions || [];
-            if (result.paymentMethod !== "cash" && transactions.length == 0) {
+            if (
+              !["cash", "upi", "bank-transfer"].includes(
+                result.paymentMethod
+              ) &&
+              transactions.length == 0
+            ) {
               transactions = await GetPaymentTransactions({
                 order_id: result?.razporPayId,
               });
