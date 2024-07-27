@@ -17,11 +17,11 @@ const PaymentSchema = new mongoose.Schema(
       required: true,
     },
     event: { type: ObjectId, ref: "Event" },
-    // Payent Method (Cash [Added by Admin], Razorpay)
+    // Payent Method (Cash, UPI, Bank Transfer [Added by Admin], Razorpay)
     paymentMethod: {
       type: String,
       default: "default",
-      enum: ["default", "razporpay", "cash"],
+      enum: ["default", "razporpay", "cash", "upi", "bank-transfer"],
       required: true,
     },
     razporPayId: { type: String, default: "" },
