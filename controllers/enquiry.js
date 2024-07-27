@@ -504,7 +504,9 @@ const Get = (req, res) => {
                           let transactions = item.transactions || [];
                           if (
                             item?.razporPayId &&
-                            item?.paymentMethod !== "cash" &&
+                            !["cash", "upi", "bank-transfer"].includes(
+                              item?.paymentMethod
+                            ) &&
                             transactions.length == 0
                           ) {
                             transactions = await GetPaymentTransactions({
