@@ -39,5 +39,11 @@ router.use("/lead-interest", require("./lead-interest"));
 router.use("/lead-source", require("./lead-source"));
 router.use("/color", require("./color"));
 router.use("/quantity", require("./quantity"));
+router.use("/location", require("./location"));
+router.use("/notification", require("./notification"));
+router.use("/vendor-category", require("./vendor-category"));
+router.use("/vendor", require("./vendor"));
+router.use("/tag", require("./tag"));
+router.use("/webhook", require("./webhook"));
 
 module.exports = router;
