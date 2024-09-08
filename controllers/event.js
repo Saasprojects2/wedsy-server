@@ -410,19 +410,19 @@ const EditDecorInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].price": price,
-          "eventDays.$[].decorItems.$[x].quantity": quantity,
-          "eventDays.$[].decorItems.$[x].unit": unit,
-          "eventDays.$[].decorItems.$[x].platform": platform,
-          "eventDays.$[].decorItems.$[x].flooring": flooring,
-          "eventDays.$[].decorItems.$[x].dimensions": dimensions,
-          "eventDays.$[].decorItems.$[x].category": category,
-          "eventDays.$[].decorItems.$[x].variant": variant,
-          "eventDays.$[].decorItems.$[x].platformRate": platformRate,
-          "eventDays.$[].decorItems.$[x].flooringRate": flooringRate,
-          "eventDays.$[].decorItems.$[x].decorPrice": decorPrice,
-          "eventDays.$[].decorItems.$[x].productVariant": productVariant,
-          "eventDays.$[].decorItems.$[x].priceModifier": priceModifier,
+          "eventDays.$.decorItems.$[x].price": price,
+          "eventDays.$.decorItems.$[x].quantity": quantity,
+          "eventDays.$.decorItems.$[x].unit": unit,
+          "eventDays.$.decorItems.$[x].platform": platform,
+          "eventDays.$.decorItems.$[x].flooring": flooring,
+          "eventDays.$.decorItems.$[x].dimensions": dimensions,
+          "eventDays.$.decorItems.$[x].category": category,
+          "eventDays.$.decorItems.$[x].variant": variant,
+          "eventDays.$.decorItems.$[x].platformRate": platformRate,
+          "eventDays.$.decorItems.$[x].flooringRate": flooringRate,
+          "eventDays.$.decorItems.$[x].decorPrice": decorPrice,
+          "eventDays.$.decorItems.$[x].productVariant": productVariant,
+          "eventDays.$.decorItems.$[x].priceModifier": priceModifier,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -453,8 +453,8 @@ const EditDecorAddOnsInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].addOns": addOns,
-          "eventDays.$[].decorItems.$[x].price": price,
+          "eventDays.$.decorItems.$[x].addOns": addOns,
+          "eventDays.$.decorItems.$[x].price": price,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -485,7 +485,7 @@ const EditDecorIncludedInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].included": included,
+          "eventDays.$.decorItems.$[x].included": included,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -516,7 +516,7 @@ const EditDecorSetupLocationImageInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].setupLocationImage":
+          "eventDays.$.decorItems.$[x].setupLocationImage":
             setupLocationImage,
         },
       },
@@ -548,7 +548,7 @@ const EditDecorPrimaryColorInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].primaryColor": primaryColor,
+          "eventDays.$.decorItems.$[x].primaryColor": primaryColor,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -579,7 +579,7 @@ const EditDecorSecondaryColorInEventDay = (req, res) => {
         : { _id, user: user_id, "eventDays._id": dayId },
       {
         $set: {
-          "eventDays.$[].decorItems.$[x].secondaryColor": secondaryColor,
+          "eventDays.$.decorItems.$[x].secondaryColor": secondaryColor,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
