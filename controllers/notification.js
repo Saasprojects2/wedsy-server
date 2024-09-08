@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Notification = require("../models/Notification");
 
 const CreateNew = (req, res) => {
@@ -21,14 +22,37 @@ const CreateNew = (req, res) => {
 };
 
 const GetAll = (req, res) => {
-  const { category } = req.query;
+  const { category, vendor, date, startDate, endDate } = req.query;
   const query = {};
   if (category) {
     query.category = category;
   }
+  if (vendor) {
+    query["references.vendor"] = {
+      $in: [vendor, new mongoose.Types.ObjectId(vendor)],
+    };
+  }
+  if (date) {
+    const filterDate = new Date(date);
+    const startFilterDate = new Date(filterDate.setHours(0, 0, 0, 0));
+    const endFilterDate = new Date(filterDate.setHours(23, 59, 59, 999));
+    query["createdAt"] = {
+      $gte: startFilterDate,
+      $lt: endFilterDate,
+    };
+  }
+  if (startDate && endDate) {
+    const startFilterDate = new Date(new Date(startDate).setHours(0, 0, 0, 0));
+    const endFilterDate = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+    query["createdAt"] = {
+      $gte: startFilterDate,
+      $lt: endFilterDate,
+    };
+  }
   Notification.find(query)
+    .sort({ createdAt: -1 })
     .then((result) => {
-      res.send(result);
+      res.send({ list: result });
     })
     .catch((error) => {
       res.status(400).send({
