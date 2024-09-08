@@ -4,6 +4,7 @@ const { VerifyOTP, SendOTP } = require("../utils/otp");
 const jwt = require("jsonwebtoken");
 const jwtConfig = require("../config/jwt");
 const Admin = require("../models/Admin");
+const Vendor = require("../models/Vendor");
 const { CheckHash, CreateHash } = require("../utils/password");
 const { SendUpdate } = require("../utils/update");
 const Enquiry = require("../models/Enquiry");
@@ -65,6 +66,44 @@ const Login = (req, res) => {
                   .catch((error) => {
                     res.status(400).send({ message: "error", error });
                   });
+              }
+            })
+            .catch((error) => {
+              res.status(400).send({ message: "error", error });
+            });
+        } else {
+          res.status(400).send({ message: "Invalid OTP" });
+        }
+      })
+      .catch((err) => {
+        res.status(400).send({ message: "error", error: err });
+      });
+  }
+};
+
+const VendorLogin = (req, res) => {
+  const { phone, Otp, ReferenceId } = req.body;
+  if (phone.length !== 13 || !Otp || !ReferenceId) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    VerifyOTP(phone, ReferenceId, Otp)
+      .then((result) => {
+        if (result.Valid === true) {
+          Vendor.findOne({ phone })
+            .then((user) => {
+              if (user) {
+                const { _id } = user;
+                const token = jwt.sign(
+                  { _id, isVendor: true },
+                  process.env.JWT_SECRET,
+                  jwtConfig
+                );
+                res.send({
+                  message: "Login Successful",
+                  token,
+                });
+              } else {
+                res.status(404).send({ message: "User not found" });
               }
             })
             .catch((error) => {
@@ -156,6 +195,11 @@ const GetAdmin = (req, res) => {
   res.send({ name, phone, email, roles });
 };
 
+const GetVendor = (req, res) => {
+  const { user } = req.auth;
+  const { name, phone, email } = user;
+  res.send({ name, phone, email });
+};
 const GetOTP = (req, res) => {
   const { phone } = req.body;
   if (!phone || phone.length !== 13) {
@@ -174,4 +218,12 @@ const GetOTP = (req, res) => {
   }
 };
 
-module.exports = { AdminLogin, GetAdmin, Login, Get, GetOTP };
+module.exports = {
+  AdminLogin,
+  GetAdmin,
+  Login,
+  Get,
+  GetOTP,
+  VendorLogin,
+  GetVendor,
+};

@@ -8,6 +8,10 @@ const auth = require("../controllers/auth");
 router.post("/admin", auth.AdminLogin);
 router.get("/admin", CheckLogin, auth.GetAdmin);
 
+// Vendor Auth
+router.post("/vendor", auth.VendorLogin);
+router.get("/vendor", CheckLogin, auth.GetVendor);
+
 // User Auth
 router.post("/", auth.Login);
 router.get("/", CheckLogin, auth.Get);
