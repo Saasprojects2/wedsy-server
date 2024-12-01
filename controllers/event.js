@@ -162,21 +162,21 @@ const UpdateNotes = (req, res) => {
     if (decor_id) {
       Event.updateOne(
         isAdmin
-          ? { _id, "eventDays._id": eventDay }
+          ? { _id, eventDays: { $elemMatch: { _id: eventDay } } }
           : {
               _id,
               user: user_id,
-              "eventDays._id": eventDay,
+              eventDays: { $elemMatch: { _id: eventDay } },
             },
         {
           $set: isAdmin
             ? {
-                "eventDays.$[].decorItems.$[x].admin_notes": admin_notes,
-                "eventDays.$[].decorItems.$[x].user_notes": user_notes,
-                "eventDays.$[].decorItems.$[x].notes": notes,
+                "eventDays.$.decorItems.$[x].admin_notes": admin_notes,
+                "eventDays.$.decorItems.$[x].user_notes": user_notes,
+                "eventDays.$.decorItems.$[x].notes": notes,
               }
             : {
-                "eventDays.$[].decorItems.$[x].user_notes": user_notes,
+                "eventDays.$.decorItems.$[x].user_notes": user_notes,
               },
         },
         { arrayFilters: [{ "x.decor": decor_id }] }
@@ -194,20 +194,20 @@ const UpdateNotes = (req, res) => {
     } else if (package_id) {
       Event.updateOne(
         isAdmin
-          ? { _id, "eventDays._id": eventDay }
+          ? { _id, eventDays: { $elemMatch: { _id: eventDay } } }
           : {
               _id,
               user: user_id,
-              "eventDays._id": eventDay,
+              eventDays: { $elemMatch: { _id: eventDay } },
             },
         {
           $set: isAdmin
             ? {
-                "eventDays.$[].packages.$[x].admin_notes": admin_notes,
-                "eventDays.$[].packages.$[x].user_notes": user_notes,
+                "eventDays.$.packages.$[x].admin_notes": admin_notes,
+                "eventDays.$.packages.$[x].user_notes": user_notes,
               }
             : {
-                "eventDays.$[].packages.$[x].user_notes": user_notes,
+                "eventDays.$.packages.$[x].user_notes": user_notes,
               },
         },
         { arrayFilters: [{ "x.package": package_id }] }
@@ -406,8 +406,8 @@ const EditDecorInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].price": price,
@@ -449,8 +449,8 @@ const EditDecorAddOnsInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].addOns": addOns,
@@ -481,8 +481,8 @@ const EditDecorIncludedInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id,eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].included": included,
@@ -512,12 +512,11 @@ const EditDecorSetupLocationImageInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
       {
         $set: {
-          "eventDays.$.decorItems.$[x].setupLocationImage":
-            setupLocationImage,
+          "eventDays.$.decorItems.$[x].setupLocationImage": setupLocationImage,
         },
       },
       { arrayFilters: [{ "x.decor": decor_id }] }
@@ -544,8 +543,8 @@ const EditDecorPrimaryColorInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
       {
         $set: {
           "eventDays.$.decorItems.$[x].primaryColor": primaryColor,
@@ -575,8 +574,8 @@ const EditDecorSecondaryColorInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id, "eventDays._id": dayId }
-        : { _id, user: user_id, "eventDays._id": dayId },
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
       {
         $set: {
           "eventDays.$.decorItems.$[x].secondaryColor": secondaryColor,
