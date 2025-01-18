@@ -10,7 +10,7 @@ const { SendUpdate } = require("../utils/update");
 const Enquiry = require("../models/Enquiry");
 
 const Login = (req, res) => {
-  const { name, phone, Otp, ReferenceId } = req.body;
+  const { name, phone, Otp, ReferenceId, source } = req.body;
   if (phone.length !== 13 || !Otp || !ReferenceId) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
@@ -47,7 +47,7 @@ const Login = (req, res) => {
                       name,
                       phone,
                       verified: true,
-                      source: "User Signup (Account Creation)",
+                      source: source || "User Signup (Account Creation)",
                       additionalInfo: {},
                     })
                       .save()
@@ -196,9 +196,49 @@ const GetAdmin = (req, res) => {
 };
 
 const GetVendor = (req, res) => {
-  const { user } = req.auth;
-  const { name, phone, email } = user;
-  res.send({ name, phone, email });
+  const { user, user_id } = req.auth;
+  const {
+    name,
+    phone,
+    email,
+    category,
+    notifications,
+    accountDetails,
+    prices,
+    gallery,
+    other,
+    businessAddress,
+    businessName,
+    businessDescription,
+    speciality,
+    servicesOffered,
+  } = user;
+  const { groomMakeup, onlyHairStyling } = other;
+  const { searchFor } = req.query;
+  if (searchFor) {
+    if (searchFor === "accountDetails") {
+      res.send({ accountDetails });
+    } else if (searchFor === "prices") {
+      res.send({ prices });
+    } else if (searchFor === "gallery") {
+      res.send({ gallery, temp: user_id });
+    } else if (searchFor === "other") {
+      res.send({ other });
+    } else if (searchFor === "businessAddress") {
+      res.send({ businessAddress });
+    } else if (searchFor === "profile") {
+      res.send({
+        businessName,
+        businessDescription,
+        speciality,
+        servicesOffered,
+        groomMakeup,
+        onlyHairStyling,
+      });
+    }
+  } else {
+    res.send({ name, phone, email, notifications, category });
+  }
 };
 const GetOTP = (req, res) => {
   const { phone } = req.body;
