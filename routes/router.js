@@ -48,5 +48,16 @@ router.use("/vendor-makeup-style", require("./vendor-makeup-style"));
 router.use("/vendor-add-ons", require("./vendor-add-ons"));
 router.use("/tag", require("./tag"));
 router.use("/webhook", require("./webhook"));
+router.use("/vendor-personal-lead", require("./vendor-personal-lead"));
+router.use("/vendor-personal-package", require("./vendor-personal-package"));
+router.use("/community", require("./community"));
+router.use("/message", require("./message"));
+router.use("/wedsy-package-category", require("./wedsy-package-category"));
+router.use("/wedsy-package", require("./wedsy-package"));
+router.use("/bidding", require("./bidding"));
+router.use("/order", require("./order"));
+router.use("/chat", require("./chat"));
+router.use("/settlements", require("./settlements"));
+router.use("/stats", require("./stats"));
 
 module.exports = router;
