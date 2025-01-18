@@ -17,6 +17,7 @@ const UserSchema = new mongoose.Schema(
     },
     wishlist: {
       decor: { type: [ObjectId], ref: "Decor", required: true, default: [] },
+      vendor: { type: [ObjectId], ref: "Vendor", required: true, default: [] },
       decorPackage: {
         type: [ObjectId],
         ref: "DecorPackage",
