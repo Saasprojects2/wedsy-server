@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const Order = require("../models/Order");
 const Payment = require("../models/Payment");
 const { createInvoice } = require("../utils/invoice");
 const {
@@ -9,11 +10,43 @@ const {
 
 const CreateNewPayment = (req, res) => {
   const { user_id, isAdmin } = req.auth;
-  const { event, paymentFor, paymentMethod, amount, user } = req.body;
+  const { event, paymentFor, paymentMethod, amount, user, order } = req.body;
   if (paymentFor === "event" && event && paymentMethod === "razporpay") {
     new Payment({
       user: user_id,
       event: event,
+      paymentFor,
+      paymentMethod,
+      amount: amount * 100,
+      amountPaid: 0,
+      amountDue: amount * 100,
+    })
+      .save()
+      .then((result) => {
+        CreatePayment({ _id: result._id })
+          .then((order) => {
+            res.status(200).send({
+              message: "success",
+              _id: result._id,
+              order_id: order.id,
+              amount: amount * 100,
+            });
+          })
+          .catch((error) => {
+            res.status(400).send({ message: "error", error });
+          });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  } else if (
+    paymentFor === "makeup-and-beauty" &&
+    order &&
+    paymentMethod === "razporpay"
+  ) {
+    new Payment({
+      user: user_id,
+      order: order,
       paymentFor,
       paymentMethod,
       amount: amount * 100,
@@ -145,73 +178,141 @@ const UpdatePayment = (req, res) => {
         Payment.findOne({ user: user_id, razporPayId: order_id })
           .then(async (payment) => {
             try {
-              const event = await Event.findOne({
-                user: user_id,
-                _id: payment.event,
-              });
-              const payments = await Payment.find({
-                user: user_id,
-                event: payment.event,
-                status: "paid",
-              });
-              let eventTotal = event.amount.total;
-              let paymentTotal = payments.reduce(
-                (accumulator, currentValue) => {
-                  return accumulator + currentValue.amountPaid / 100;
-                },
-                0
-              );
-              if (paymentTotal < eventTotal) {
-                Event.findOneAndUpdate(
-                  {
-                    _id: event._id,
-                    user: user_id,
+              if (
+                payment?.paymentFor === "event" ||
+                payment?.paymentFor === "default"
+              ) {
+                const event = await Event.findOne({
+                  user: user_id,
+                  _id: payment.event,
+                });
+                const payments = await Payment.find({
+                  user: user_id,
+                  event: payment.event,
+                  status: "paid",
+                });
+                let eventTotal = event.amount.total;
+                let paymentTotal = payments.reduce(
+                  (accumulator, currentValue) => {
+                    return accumulator + currentValue.amountPaid / 100;
                   },
-                  {
-                    $set: {
-                      "amount.due": eventTotal - paymentTotal,
-                      "amount.paid": paymentTotal,
-                    },
-                  }
-                )
-                  .then((result) => {
-                    res.status(200).send({ message: "success" });
-                  })
-                  .catch((error) => {
-                    res.status(400).send({ message: "error", error });
-                  });
-              } else if (paymentTotal == eventTotal) {
-                Event.findOneAndUpdate(
-                  {
-                    _id: event._id,
-                    user: user_id,
-                  },
-                  {
-                    $set: {
-                      "amount.due": eventTotal - paymentTotal,
-                      "amount.paid": paymentTotal,
-                      "status.paymentDone": true,
-                      "eventDays.$[elem].status.paymentDone": true,
-                    },
-                  },
-                  {
-                    arrayFilters: [
-                      {
-                        "elem._id": { $in: event.eventDays.map((i) => i._id) },
-                      },
-                    ],
-                  }
-                )
-                  .then((result) => {
-                    res.status(200).send({ message: "success" });
-                  })
-                  .catch((error) => {
-                    res.status(400).send({ message: "error", error });
-                  });
-              } else {
-                console.log(
-                  `Error with Payments, event:${event._id}. Payment: ${paymentTotal}, Event: ${eventTotal}`
+                  0
                 );
+                if (paymentTotal < eventTotal) {
+                  Event.findOneAndUpdate(
+                    {
+                      _id: event._id,
+                      user: user_id,
+                    },
+                    {
+                      $set: {
+                        "amount.due": eventTotal - paymentTotal,
+                        "amount.paid": paymentTotal,
+                      },
+                    }
+                  )
+                    .then((result) => {
+                      res.status(200).send({ message: "success" });
+                    })
+                    .catch((error) => {
+                      res.status(400).send({ message: "error", error });
+                    });
+                } else if (paymentTotal == eventTotal) {
+                  Event.findOneAndUpdate(
+                    {
+                      _id: event._id,
+                      user: user_id,
+                    },
+                    {
+                      $set: {
+                        "amount.due": eventTotal - paymentTotal,
+                        "amount.paid": paymentTotal,
+                        "status.paymentDone": true,
+                        "eventDays.$[elem].status.paymentDone": true,
+                      },
+                    },
+                    {
+                      arrayFilters: [
+                        {
+                          "elem._id": {
+                            $in: event.eventDays.map((i) => i._id),
+                          },
+                        },
+                      ],
+                    }
+                  )
+                    .then((result) => {
+                      res.status(200).send({ message: "success" });
+                    })
+                    .catch((error) => {
+                      res.status(400).send({ message: "error", error });
+                    });
+                } else {
+                  console.log(
+                    `Error with Payments, event:${event._id}. Payment: ${paymentTotal}, Event: ${eventTotal}`
+                  );
+                }
+              } else if (payment?.paymentFor === "makeup-and-beauty") {
+                const order = await Order.findOne({
+                  user: user_id,
+                  _id: payment.order,
+                });
+                const payments = await Payment.find({
+                  user: user_id,
+                  order: payment.order,
+                  status: "paid",
+                });
+                let orderTotal = order.amount.total;
+                let paymentTotal = payments.reduce(
+                  (accumulator, currentValue) => {
+                    return accumulator + currentValue.amountPaid / 100;
+                  },
+                  0
+                );
+                if (paymentTotal < orderTotal) {
+                  Order.findOneAndUpdate(
+                    {
+                      _id: order._id,
+                      user: user_id,
+                    },
+                    {
+                      $set: {
+                        "amount.due": orderTotal - paymentTotal,
+                        "amount.paid": paymentTotal,
+                      },
+                    }
+                  )
+                    .then((result) => {
+                      res.status(200).send({ message: "success" });
+                    })
+                    .catch((error) => {
+                      res.status(400).send({ message: "error", error });
+                    });
+                } else if (paymentTotal == orderTotal) {
+                  Order.findOneAndUpdate(
+                    {
+                      _id: order._id,
+                      user: user_id,
+                    },
+                    {
+                      $set: {
+                        "amount.due": orderTotal - paymentTotal,
+                        "amount.paid": paymentTotal,
+                        "status.paymentDone": true,
+                      },
+                    }
+                  )
+                    .then((result) => {
+                      res.status(200).send({ message: "success" });
+                    })
+                    .catch((error) => {
+                      res.status(400).send({ message: "error", error });
+                    });
+                } else {
+                  console.log(
+                    `Error with Payments, order:${order._id}. Payment: ${paymentTotal}, Order: ${orderTotal}`
+                  );
+                }
               }
             } catch (error) {
               console.log(error);
