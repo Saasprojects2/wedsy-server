@@ -56,6 +56,75 @@ const Update = (req, res) => {
   }
 };
 
+const UpdateEventPlanner = (req, res) => {
+  const { _id } = req.params;
+  const { eventPlanner } = req.body;
+  if (!eventPlanner) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      { _id },
+      {
+        eventPlanner,
+      }
+    )
+      .then((result) => {
+        res.status(200).send({ message: "success" });
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
+const ShuffleEventDays = async (req, res) => {
+  const { _id } = req.params;
+  const { eventDayId, direction } = req.body;
+  if (!["up", "down"].includes(direction)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid direction. Use 'up' or 'down'." });
+  }
+
+  try {
+    // Find the event by ID
+    const event = await Event.findById(_id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+
+    const eventDays = event.eventDays;
+    const index = eventDays.findIndex(
+      (day) => day._id.toString() === eventDayId
+    );
+
+    if (index === -1) {
+      return res.status(404).json({ error: "Event day not found." });
+    }
+
+    // Calculate the new index
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+
+    if (newIndex < 0 || newIndex >= eventDays.length) {
+      return res.status(400).json({ error: "Cannot shuffle beyond bounds." });
+    }
+
+    // Swap the event days
+    [eventDays[index], eventDays[newIndex]] = [
+      eventDays[newIndex],
+      eventDays[index],
+    ];
+
+    // Save the updated event
+    await event.save();
+
+    res.status(200).json({ message: "success", event });
+  } catch (error) {
+    console.error("Error shuffling event days:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
 const AddEventDay = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id } = req.params;
@@ -88,6 +157,37 @@ const AddEventDay = (req, res) => {
       });
   }
 };
+
+const UpdateEventDayNotes = (req, res) => {
+  const { user_id, isAdmin } = req.auth;
+  const { _id, eventDay } = req.params;
+  const { notes } = req.body;
+  if (notes === null || notes === undefined) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    Event.findOneAndUpdate(
+      isAdmin
+        ? { _id, "eventDays._id": eventDay }
+        : { _id, user: user_id, "eventDays._id": eventDay },
+      {
+        $set: {
+          "eventDays.$.notes": notes,
+        },
+      }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "Event not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const UpdateEventDay = (req, res) => {
   const { user_id, isAdmin } = req.auth;
   const { _id, eventDay } = req.params;
@@ -481,7 +581,7 @@ const EditDecorIncludedInEventDay = (req, res) => {
   } else {
     Event.findOneAndUpdate(
       isAdmin
-        ? { _id,eventDays: { $elemMatch: { _id: dayId } } }
+        ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
         : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
@@ -513,7 +613,7 @@ const EditDecorSetupLocationImageInEventDay = (req, res) => {
     Event.findOneAndUpdate(
       isAdmin
         ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
-        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].setupLocationImage": setupLocationImage,
@@ -544,7 +644,7 @@ const EditDecorPrimaryColorInEventDay = (req, res) => {
     Event.findOneAndUpdate(
       isAdmin
         ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
-        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].primaryColor": primaryColor,
@@ -575,7 +675,7 @@ const EditDecorSecondaryColorInEventDay = (req, res) => {
     Event.findOneAndUpdate(
       isAdmin
         ? { _id, eventDays: { $elemMatch: { _id: dayId } } }
-        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } }},
+        : { _id, user: user_id, eventDays: { $elemMatch: { _id: dayId } } },
       {
         $set: {
           "eventDays.$.decorItems.$[x].secondaryColor": secondaryColor,
@@ -1443,4 +1543,7 @@ module.exports = {
   AddEventAccess,
   RemoveEventAccess,
   MarkEventLost,
+  UpdateEventPlanner,
+  ShuffleEventDays,
+  UpdateEventDayNotes,
 };
