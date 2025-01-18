@@ -8,11 +8,13 @@ const EventSchema = new mongoose.Schema(
     name: { type: String, required: true },
     community: { type: String, default: "" },
     lostResponse: { type: String, default: "" },
+    eventPlanner: { type: String, default: "" },
     eventNotes: { type: String, default: "" },
     eventType: { type: String, default: "" },
     eventDays: {
       type: [
         {
+          notes: { type: String, default: "" },
           name: { type: String, required: true },
           date: { type: String, required: true },
           time: { type: String, required: true },
@@ -63,6 +65,7 @@ const EventSchema = new mongoose.Schema(
                     {
                       name: { type: String, default: "" },
                       price: { type: Number, default: 0 },
+                      notes: { type: String, default: "" },
                     },
                   ],
                   required: true,
