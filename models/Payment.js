@@ -13,10 +13,11 @@ const PaymentSchema = new mongoose.Schema(
     paymentFor: {
       type: String,
       default: "default",
-      enum: ["default", "event"],
+      enum: ["default", "event", "makeup-and-beauty"],
       required: true,
     },
-    event: { type: ObjectId, ref: "Event" },
+    event: { type: ObjectId, ref: "Event", default: null },
+    order: { type: ObjectId, ref: "Order", default: null },
     // Payent Method (Cash, UPI, Bank Transfer [Added by Admin], Razorpay)
     paymentMethod: {
       type: String,
