@@ -11,5 +11,7 @@ router.get("/wishlist/:wishlist", CheckLogin, user.GetWishList);
 router.post("/wishlist/:wishlist", CheckLogin, user.AddToWishList);
 router.delete("/wishlist/:wishlist", CheckLogin, user.RemoveFromWishList);
 router.get("/is-added-to-wishlist", CheckLogin, user.IsAddedToWishlist);
+router.get("/saved-address", CheckLogin, user.GetUserSavedAddress);
+router.post("/saved-address", CheckLogin, user.AddSavedAddress);
 
 module.exports = router;
