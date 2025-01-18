@@ -5,7 +5,7 @@ const vendorMakeupStyle = require("../controllers/vendor-makeup-style");
 const { CheckLogin, CheckAdminLogin } = require("../middlewares/auth");
 
 router.post("/", CheckAdminLogin, vendorMakeupStyle.CreateNew);
-router.get("/", CheckAdminLogin, vendorMakeupStyle.GetAll);
+router.get("/", vendorMakeupStyle.GetAll);
 router.get("/:_id", CheckAdminLogin, vendorMakeupStyle.Get);
 router.put("/:_id", CheckAdminLogin, vendorMakeupStyle.Update);
 router.post(
