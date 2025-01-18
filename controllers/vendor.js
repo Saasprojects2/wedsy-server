@@ -2,6 +2,7 @@ const Vendor = require("../models/Vendor");
 const { createObjectCsvStringifier } = require("csv-writer");
 const { CreateNotification } = require("../utils/notification");
 const jwt = require("jsonwebtoken");
+const _ = require("lodash");
 const jwtConfig = require("../config/jwt");
 const { VerifyOTP } = require("../utils/otp");
 
@@ -248,7 +249,7 @@ const GetAll = (req, res) => {
         });
     }
   } else {
-    Vendor.find({})
+    Vendor.find({ profileVisibility: true })
       .then((result) => {
         res.send(result);
       })
@@ -262,13 +263,25 @@ const GetAll = (req, res) => {
 };
 
 const Get = (req, res) => {
+  const { isAdmin } = req.auth;
   const { _id } = req.params;
-  Vendor.findById({ _id })
+  const { fetchSimilar } = req.query;
+  Vendor.findOne(isAdmin ? { _id } : { _id, profileVisibility: true })
     .then((result) => {
       if (!result) {
         res.status(404).send();
       } else {
-        res.send(result);
+        Vendor.find({})
+          .limit(4)
+          .then((similar) => {
+            res.send({ ...result.toObject(), similarVendors: similar });
+          })
+          .catch((error) => {
+            res.status(400).send({
+              message: "error",
+              error,
+            });
+          });
       }
     })
     .catch((error) => {
@@ -401,6 +414,7 @@ const Update = (req, res) => {
         businessDescription,
         servicesOffered,
         speciality,
+        gallery,
         other,
       } = req.body;
       if (
@@ -414,14 +428,20 @@ const Update = (req, res) => {
         !businessAddress?.googleMaps &&
         !businessName &&
         !businessDescription &&
-        servicesOffered.length === 0 &&
+        servicesOffered?.length === 0 &&
         !speciality &&
-        (other.groomMakeup === undefined || other.groomMakeup === null)
+        (other.groomMakeup === undefined || other.groomMakeup === null) &&
+        (other?.lgbtqMakeup === undefined || other?.lgbtqMakeup === null) &&
+        !other?.experience &&
+        !other?.clients &&
+        !other?.usp &&
+        other?.makeupProducts?.length === 0 &&
+        other?.awards?.length === 0 &&
+        !gallery?.coverPhoto &&
+        gallery?.photos?.length === 0
       ) {
         res.status(400).send({ message: "Incomplete Data" });
       } else {
-        console.log(tag);
-
         Vendor.findById(_id)
           .then((vendor) => {
             if (!vendor) {
@@ -429,6 +449,30 @@ const Update = (req, res) => {
             } else {
               const updates = {};
               const notifications = [];
+              if (
+                gallery?.coverPhoto &&
+                gallery?.coverPhoto !== vendor?.gallery?.coverPhoto
+              ) {
+                updates["gallery.coverPhoto"] = gallery?.coverPhoto;
+                notifications.push({
+                  title: `Vendor Gallery (coverPhoto) Changed`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                gallery?.photos &&
+                gallery?.photos.length > 0 &&
+                JSON.stringify(gallery?.photos) !==
+                  JSON.stringify(vendor?.gallery?.photos)
+              ) {
+                updates["gallery.photos"] = gallery?.photos;
+                notifications.push({
+                  title: `Vendor Gallery (photos) Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
               if (name && name !== vendor.name) {
                 updates.name = name;
                 notifications.push({
@@ -471,16 +515,88 @@ const Update = (req, res) => {
                 });
               }
               if (
+                other?.makeupProducts &&
+                other?.makeupProducts.length > 0 &&
+                JSON.stringify(other?.makeupProducts) !==
+                  JSON.stringify(vendor?.other?.makeupProducts)
+              ) {
+                updates["other.makeupProducts"] = other?.makeupProducts;
+                notifications.push({
+                  title: `Vendor Makeup Products Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                other?.awards &&
+                other?.awards.length > 0 &&
+                JSON.stringify(other?.awards) !==
+                  JSON.stringify(vendor?.other?.awards)
+              ) {
+                updates["other.awards"] = other?.awards;
+                notifications.push({
+                  title: `Vendor Awards Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                other?.experience &&
+                other?.experience !== vendor?.other?.experience
+              ) {
+                updates["other.experience"] = other?.experience;
+                notifications.push({
+                  title: `Vendor Experience Changed: ${
+                    vendor?.other?.experience || ""
+                  } to ${other?.experience}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (other?.clients && other?.clients !== vendor?.other?.clients) {
+                updates["other.clients"] = other?.clients;
+                notifications.push({
+                  title: `Vendor Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (other?.usp && other.usp !== vendor?.other?.usp) {
+                updates["other.usp"] = other?.usp;
+                notifications.push({
+                  title: `Vendor Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
                 !(
-                  other.groomMakeup === undefined || other.groomMakeup === null
+                  other?.groomMakeup === undefined ||
+                  other?.groomMakeup === null
                 ) &&
-                other.groomMakeup !== vendor.other.groomMakeup
+                other?.groomMakeup !== vendor?.other?.groomMakeup
               ) {
                 updates["other.groomMakeup"] = other.groomMakeup;
                 notifications.push({
                   title: `Vendor Groom Makeup Status Changed: ${
                     vendor.other.groomMakeup ? "True" : "False"
                   } to ${other.groomMakeup ? "True" : "False"}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                !(
+                  other?.lgbtqMakeup === undefined ||
+                  other?.lgbtqMakeup === null
+                ) &&
+                other?.lgbtqMakeup !== vendor?.other?.lgbtqMakeup
+              ) {
+                updates["other.lgbtqMakeup"] = other.lgbtqMakeup;
+                notifications.push({
+                  title: `Vendor LGBTQ Makeup Status Changed: ${
+                    vendor.other.lgbtqMakeup ? "True" : "False"
+                  } to ${other.lgbtqMakeup ? "True" : "False"}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -620,19 +736,50 @@ const Update = (req, res) => {
       businessDescription,
       servicesOffered,
       speciality,
+      notifications,
+      accountDetails,
+      prices,
+      gallery,
+      other,
     } = req.body;
     if (
       !name &&
-      !businessAddress?.state &&
-      !businessAddress?.city &&
-      !businessAddress?.area &&
-      !businessAddress?.pincode &&
-      !businessAddress?.address &&
-      !businessAddress?.googleMaps &&
+      // !businessAddress?.state &&
+      // !businessAddress?.city &&
+      // !businessAddress?.area &&
+      // !businessAddress?.pincode &&
+      // !businessAddress?.address &&
+      // !businessAddress?.googleMaps &&
+      !(
+        _.has(req.body, "businessAddress") &&
+        _.isPlainObject(req?.body?.businessAddress)
+      ) &&
       !businessName &&
       !businessDescription &&
-      servicesOffered.length === 0 &&
-      !speciality
+      servicesOffered?.length === 0 &&
+      !speciality &&
+      !prices?.party &&
+      !prices?.bridal &&
+      !prices?.groom &&
+      !gallery?.coverPhoto &&
+      gallery?.photos?.length === 0 &&
+      [
+        notifications?.bidding,
+        notifications?.packages,
+        notifications?.upcomingEvents,
+        notifications?.booking,
+        notifications?.payment,
+      ].filter((i) => i === null || i === undefined)?.length >= 0 &&
+      !accountDetails?.bankName &&
+      !accountDetails?.accountNumber &&
+      !accountDetails?.ifscCode &&
+      (other?.groomMakeup === undefined || other?.groomMakeup === null) &&
+      (other?.lgbtqMakeup === undefined || other?.lgbtqMakeup === null) &&
+      !other?.experience &&
+      !other?.clients &&
+      !other?.usp &&
+      other?.makeupProducts?.length === 0 &&
+      other?.awards?.length === 0
     ) {
       res.status(400).send({ message: "Incomplete Data" });
     } else {
@@ -643,10 +790,286 @@ const Update = (req, res) => {
               res.status(404).send({ message: "Vendor not found" });
             } else {
               const updates = {};
-              const notifications = [];
+              const notificationsList = [];
+              if (
+                [
+                  notifications?.bidding,
+                  notifications?.packages,
+                  notifications?.upcomingEvents,
+                  notifications?.booking,
+                  notifications?.payment,
+                ].filter((i) => i === null || i === undefined)?.length === 0 &&
+                (notifications?.bidding !== vendor?.notifications?.bidding ||
+                  notifications?.packages !== vendor?.notifications?.packages ||
+                  notifications?.upcomingEvents !==
+                    vendor?.notifications?.upcomingEvents ||
+                  notifications?.booking !== vendor?.notifications?.booking ||
+                  notifications?.payment !== vendor?.notifications?.payment)
+              ) {
+                updates.notifications = {
+                  bidding: notifications?.bidding,
+                  packages: notifications?.packages,
+                  upcomingEvents: notifications?.upcomingEvents,
+                  booking: notifications?.booking,
+                  payment: notifications?.payment,
+                };
+                if (notifications?.bidding !== vendor?.notifications?.bidding) {
+                  notificationsList.push({
+                    title: `Vendor Bidding Notification Status Changed: ${
+                      vendor?.notifications?.bidding
+                        ?.toString()
+                        .toUpperCase() || ""
+                    } to ${
+                      notifications?.bidding?.toString().toUpperCase() || ""
+                    }`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+                if (
+                  notifications?.packages !== vendor?.notifications?.packages
+                ) {
+                  notificationsList.push({
+                    title: `Vendor Packages Notification Status Changed: ${
+                      vendor?.notifications?.packages
+                        ?.toString()
+                        .toUpperCase() || ""
+                    } to ${
+                      notifications?.packages?.toString().toUpperCase() || ""
+                    }`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+                if (
+                  notifications?.upcomingEvents !==
+                  vendor?.notifications?.upcomingEvents
+                ) {
+                  notificationsList.push({
+                    title: `Vendor Upcoming Events Notification Status Changed: ${
+                      vendor?.notifications?.upcomingEvents
+                        ?.toString()
+                        .toUpperCase() || ""
+                    } to ${
+                      notifications?.upcomingEvents?.toString().toUpperCase() ||
+                      ""
+                    }`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+                if (notifications?.booking !== vendor?.notifications?.booking) {
+                  notificationsList.push({
+                    title: `Vendor Booking Notification Status Changed: ${
+                      vendor?.notifications?.booking
+                        ?.toString()
+                        .toUpperCase() || ""
+                    } to ${
+                      notifications?.booking?.toString().toUpperCase() || ""
+                    }`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+                if (notifications?.payment !== vendor?.notifications?.payment) {
+                  notificationsList.push({
+                    title: `Vendor Payment Notification Status Changed: ${
+                      vendor?.notifications?.payment
+                        ?.toString()
+                        .toUpperCase() || ""
+                    } to ${
+                      notifications?.payment?.toString().toUpperCase() || ""
+                    }`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+              }
+              if (
+                other?.makeupProducts &&
+                other?.makeupProducts.length > 0 &&
+                JSON.stringify(other?.makeupProducts) !==
+                  JSON.stringify(vendor?.other?.makeupProducts)
+              ) {
+                updates["other.makeupProducts"] = other?.makeupProducts;
+                notificationsList.push({
+                  title: `Vendor Makeup Products Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                other?.awards &&
+                other?.awards.length > 0 &&
+                JSON.stringify(other?.awards) !==
+                  JSON.stringify(vendor?.other?.awards)
+              ) {
+                updates["other.awards"] = other?.awards;
+                notificationsList.push({
+                  title: `Vendor Awards Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                other?.experience &&
+                other?.experience !== vendor?.other?.experience
+              ) {
+                updates["other.experience"] = other?.experience;
+                notificationsList.push({
+                  title: `Vendor Experience Changed: ${
+                    vendor?.other?.experience || ""
+                  } to ${other?.experience}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (other?.clients && other?.clients !== vendor?.other?.clients) {
+                updates["other.clients"] = other?.clients;
+                notificationsList.push({
+                  title: `Vendor Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (other?.usp && other.usp !== vendor?.other?.usp) {
+                updates["other.usp"] = other?.usp;
+                notificationsList.push({
+                  title: `Vendor Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                !(
+                  other?.groomMakeup === undefined ||
+                  other?.groomMakeup === null
+                ) &&
+                other?.groomMakeup !== vendor?.other?.groomMakeup
+              ) {
+                updates["other.groomMakeup"] = other.groomMakeup;
+                notificationsList.push({
+                  title: `Vendor Groom Makeup Status Changed: ${
+                    vendor.other.groomMakeup ? "True" : "False"
+                  } to ${other.groomMakeup ? "True" : "False"}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                !(
+                  other?.lgbtqMakeup === undefined ||
+                  other?.lgbtqMakeup === null
+                ) &&
+                other?.lgbtqMakeup !== vendor?.other?.lgbtqMakeup
+              ) {
+                updates["other.lgbtqMakeup"] = other.lgbtqMakeup;
+                notificationsList.push({
+                  title: `Vendor LGBTQ Makeup Status Changed: ${
+                    vendor.other.lgbtqMakeup ? "True" : "False"
+                  } to ${other.lgbtqMakeup ? "True" : "False"}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                gallery?.coverPhoto &&
+                gallery?.coverPhoto !== vendor?.gallery?.coverPhoto
+              ) {
+                updates["gallery.coverPhoto"] = gallery?.coverPhoto;
+                notificationsList.push({
+                  title: `Vendor Gallery (coverPhoto) Changed`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                gallery?.photos &&
+                gallery?.photos.length > 0 &&
+                JSON.stringify(gallery?.photos) !==
+                  JSON.stringify(vendor?.gallery?.photos)
+              ) {
+                updates["gallery.photos"] = gallery?.photos;
+                notificationsList.push({
+                  title: `Vendor Gallery (photos) Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (prices?.party && prices?.party !== vendor?.prices?.party) {
+                updates["prices.party"] = prices?.party;
+                notificationsList.push({
+                  title: `Vendor Prices (Party) Changed: ${
+                    vendor?.prices?.party || ""
+                  } to ${prices?.party}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (prices?.bridal && prices?.bridal !== vendor?.prices?.bridal) {
+                updates["prices.bridal"] = prices?.bridal;
+                notificationsList.push({
+                  title: `Vendor Prices (Bridal) Changed: ${
+                    vendor?.prices?.bridal || ""
+                  } to ${prices?.bridal}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (prices?.groom && prices?.groom !== vendor?.prices?.groom) {
+                updates["prices.groom"] = prices?.groom;
+                notificationsList.push({
+                  title: `Vendor Prices (Groom) Changed: ${
+                    vendor?.prices?.groom || ""
+                  } to ${prices?.groom}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                accountDetails?.bankName &&
+                accountDetails?.bankName !== vendor?.accountDetails?.bankName
+              ) {
+                updates["accountDetails.bankName"] = accountDetails?.bankName;
+                notificationsList.push({
+                  title: `Vendor Account Details Bank Name Changed: ${
+                    vendor?.accountDetails?.bankName || ""
+                  } to ${accountDetails?.bankName}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                accountDetails?.accountNumber &&
+                accountDetails?.accountNumber !==
+                  vendor?.accountDetails?.accountNumber
+              ) {
+                updates["accountDetails.accountNumber"] =
+                  accountDetails?.accountNumber;
+                notificationsList.push({
+                  title: `Vendor Account Details Account Number Changed: ${
+                    vendor?.accountDetails?.accountNumber || ""
+                  } to ${accountDetails?.accountNumber}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (
+                accountDetails?.ifscCode &&
+                accountDetails?.ifscCode !== vendor?.accountDetails?.ifscCode
+              ) {
+                updates["accountDetails.ifscCode"] = accountDetails?.ifscCode;
+                notificationsList.push({
+                  title: `Vendor Account Details IFSC Code Changed: ${
+                    vendor?.accountDetails?.ifscCode || ""
+                  } to ${accountDetails?.ifscCode}`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
               if (name && name !== vendor?.name) {
                 updates.name = name;
-                notifications.push({
+                notificationsList.push({
                   title: `Vendor Name Changed: ${
                     vendor?.name || ""
                   } to ${name}`,
@@ -656,7 +1079,7 @@ const Update = (req, res) => {
               }
               if (speciality && speciality !== vendor?.speciality) {
                 updates.speciality = speciality;
-                notifications.push({
+                notificationsList.push({
                   title: `Vendor Speciality Changed: ${
                     vendor?.speciality || ""
                   } to ${speciality}`,
@@ -671,7 +1094,7 @@ const Update = (req, res) => {
                   JSON.stringify(vendor?.servicesOffered)
               ) {
                 updates.servicesOffered = servicesOffered;
-                notifications.push({
+                notificationsList.push({
                   title: `Vendor Services Offered Changed: ${
                     vendor?.servicesOffered.join(", ") || ""
                   } to ${servicesOffered.join(", ")}`,
@@ -681,7 +1104,7 @@ const Update = (req, res) => {
               }
               if (businessName && businessName !== vendor?.businessName) {
                 updates.businessName = businessName;
-                notifications.push({
+                notificationsList.push({
                   title: `Vendor Business Name Changed: ${
                     vendor?.businessName || ""
                   } to ${businessName}`,
@@ -694,7 +1117,7 @@ const Update = (req, res) => {
                 businessDescription !== vendor?.businessDescription
               ) {
                 updates.businessDescription = businessDescription;
-                notifications.push({
+                notificationsList.push({
                   title: `Vendor Business Description Changed: ${
                     vendor?.businessDescription || ""
                   } to ${businessDescription}`,
@@ -702,86 +1125,94 @@ const Update = (req, res) => {
                   references: { vendor: vendor._id },
                 });
               }
-              if (
-                businessAddress?.state &&
-                businessAddress?.state !== vendor?.businessAddress?.state
-              ) {
-                updates["businessAddress.state"] = businessAddress?.state;
-                notifications.push({
-                  title: `Vendor State Changed: ${
-                    vendor?.businessAddress?.state || ""
-                  } to ${businessAddress?.state}`,
+              if(!_.isEqual(businessAddress, vendor?.businessAddress)){
+                updates["businessAddress"] = businessAddress;
+                notificationsList.push({
+                  title: `Vendor Business Address Changed`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
               }
-              if (
-                businessAddress?.city &&
-                businessAddress?.city !== vendor?.businessAddress?.city
-              ) {
-                updates["businessAddress.city"] = businessAddress?.city;
-                notifications.push({
-                  title: `Vendor City Changed: ${
-                    vendor?.businessAddress?.city || ""
-                  } to ${businessAddress?.city}`,
-                  category: "Vendor",
-                  references: { vendor: vendor._id },
-                });
-              }
-              if (
-                businessAddress?.area &&
-                businessAddress?.area !== vendor?.businessAddress?.area
-              ) {
-                updates["businessAddress.area"] = businessAddress?.area;
-                notifications.push({
-                  title: `Vendor Area Changed: ${
-                    vendor?.businessAddress?.area || ""
-                  } to ${businessAddress?.area}`,
-                  category: "Vendor",
-                  references: { vendor: vendor._id },
-                });
-              }
-              if (
-                businessAddress?.pincode &&
-                businessAddress?.pincode !== vendor?.businessAddress?.pincode
-              ) {
-                updates["businessAddress.pincode"] = businessAddress?.pincode;
-                notifications.push({
-                  title: `Vendor Pincode Changed: ${
-                    vendor?.businessAddress?.pincode || ""
-                  } to ${businessAddress?.pincode}`,
-                  category: "Vendor",
-                  references: { vendor: vendor._id },
-                });
-              }
-              if (
-                businessAddress?.address &&
-                businessAddress?.address !== vendor?.businessAddress?.address
-              ) {
-                updates["businessAddress.address"] = businessAddress?.address;
-                notifications.push({
-                  title: `Vendor Address Changed: ${
-                    vendor?.businessAddress?.address || ""
-                  } to ${businessAddress?.address}`,
-                  category: "Vendor",
-                  references: { vendor: vendor._id },
-                });
-              }
-              if (
-                businessAddress?.googleMaps &&
-                businessAddress?.googleMaps !==
-                  vendor?.businessAddress?.googleMaps
-              ) {
-                updates["businessAddress.googleMaps"] =
-                  businessAddress?.googleMaps;
-                notifications.push({
-                  title: `Vendor Google Maps Link Changed: ${
-                    vendor?.businessAddress?.googleMaps || ""
-                  } to ${businessAddress?.googleMaps}`,
-                  category: "Vendor",
-                  references: { vendor: vendor._id },
-                });
-              }
+              // if (
+              //   businessAddress?.state &&
+              //   businessAddress?.state !== vendor?.businessAddress?.state
+              // ) {
+              //   updates["businessAddress.state"] = businessAddress?.state;
+              //   notificationsList.push({
+              //     title: `Vendor State Changed: ${
+              //       vendor?.businessAddress?.state || ""
+              //     } to ${businessAddress?.state}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
+              // if (
+              //   businessAddress?.city &&
+              //   businessAddress?.city !== vendor?.businessAddress?.city
+              // ) {
+              //   updates["businessAddress.city"] = businessAddress?.city;
+              //   notificationsList.push({
+              //     title: `Vendor City Changed: ${
+              //       vendor?.businessAddress?.city || ""
+              //     } to ${businessAddress?.city}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
+              // if (
+              //   businessAddress?.area &&
+              //   businessAddress?.area !== vendor?.businessAddress?.area
+              // ) {
+              //   updates["businessAddress.area"] = businessAddress?.area;
+              //   notificationsList.push({
+              //     title: `Vendor Area Changed: ${
+              //       vendor?.businessAddress?.area || ""
+              //     } to ${businessAddress?.area}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
+              // if (
+              //   businessAddress?.pincode &&
+              //   businessAddress?.pincode !== vendor?.businessAddress?.pincode
+              // ) {
+              //   updates["businessAddress.pincode"] = businessAddress?.pincode;
+              //   notificationsList.push({
+              //     title: `Vendor Pincode Changed: ${
+              //       vendor?.businessAddress?.pincode || ""
+              //     } to ${businessAddress?.pincode}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
+              // if (
+              //   businessAddress?.address &&
+              //   businessAddress?.address !== vendor?.businessAddress?.address
+              // ) {
+              //   updates["businessAddress.address"] = businessAddress?.address;
+              //   notificationsList.push({
+              //     title: `Vendor Address Changed: ${
+              //       vendor?.businessAddress?.address || ""
+              //     } to ${businessAddress?.address}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
+              // if (
+              //   businessAddress?.googleMaps &&
+              //   businessAddress?.googleMaps !==
+              //     vendor?.businessAddress?.googleMaps
+              // ) {
+              //   updates["businessAddress.googleMaps"] =
+              //     businessAddress?.googleMaps;
+              //   notificationsList.push({
+              //     title: `Vendor Google Maps Link Changed: ${
+              //       vendor?.businessAddress?.googleMaps || ""
+              //     } to ${businessAddress?.googleMaps}`,
+              //     category: "Vendor",
+              //     references: { vendor: vendor._id },
+              //   });
+              // }
               if (Object.keys(updates).length === 0) {
                 return res.status(400).send({ message: "No changes detected" });
               }
@@ -792,8 +1223,7 @@ const Update = (req, res) => {
               )
                 .then((result) => {
                   if (result) {
-                    console.log("Vendor", vendor);
-                    notifications.forEach((notification) =>
+                    notificationsList.forEach((notification) =>
                       CreateNotification(notification)
                     );
                     res.status(200).send({ message: "success" });
