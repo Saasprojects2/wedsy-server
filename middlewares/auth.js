@@ -9,12 +9,13 @@ function CheckToken(req, res, next) {
       user_id: "",
       user: {},
       isAdmin: false,
+      isVendor: false,
     };
     next();
     return;
   }
   const token = req.headers.authorization.split(" ")[1];
-  if (!token) {
+  if (!token || token === "null") {
     req.auth = {
       user_id: "",
       user: {},
