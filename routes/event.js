@@ -29,9 +29,12 @@ router.post(
   CheckAdminLogin,
   event.SendEventBookingReminder
 );
+router.put("/:_id/event-planner", CheckAdminLogin, event.UpdateEventPlanner);
+router.put("/:_id/shuffle-eventDay", CheckAdminLogin, event.ShuffleEventDays);
 router.post("/:_id/eventDay", CheckLogin, event.AddEventDay);
 router.put("/:_id/eventDay/:eventDay", CheckLogin, event.UpdateEventDay);
 router.delete("/:_id/eventDay/:eventDay", CheckLogin, event.DeleteEventDay);
+router.put("/:_id/notes/:eventDay", CheckLogin, event.UpdateEventDayNotes);
 router.put("/:_id/eventDay/:eventDay/notes", CheckLogin, event.UpdateNotes);
 router.post("/:_id/decor/:dayId", CheckLogin, event.AddDecorInEventDay);
 router.put("/:_id/decor/:dayId", CheckLogin, event.EditDecorInEventDay);
