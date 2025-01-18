@@ -89,4 +89,8 @@ const GetPaymentTransactions = ({ order_id }) => {
   });
 };
 
-module.exports = { CreatePayment, GetPaymentStatus, GetPaymentTransactions };
+module.exports = {
+  CreatePayment,
+  GetPaymentStatus,
+  GetPaymentTransactions,
+};
