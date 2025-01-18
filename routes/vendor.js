@@ -6,12 +6,13 @@ const {
   CheckLogin,
   CheckAdminLogin,
   CheckVendorLogin,
+  CheckToken,
 } = require("../middlewares/auth");
 
 router.post("/", vendor.CreateNew);
-router.get("/", CheckAdminLogin, vendor.GetAll);
-router.get("/:_id", CheckAdminLogin, vendor.Get);
-router.post("/:_id/notes", vendor.AddNotes);
+router.get("/", CheckToken, vendor.GetAll);
+router.get("/:_id", CheckToken, vendor.Get);
+router.post("/:_id/notes", CheckAdminLogin, vendor.AddNotes);
 router.put("/", CheckVendorLogin, vendor.Update);
 router.put("/:_id", CheckAdminLogin, vendor.Update);
 router.delete("/:_id", CheckAdminLogin, vendor.Delete);
