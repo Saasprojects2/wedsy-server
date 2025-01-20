@@ -27,6 +27,7 @@
     "lodash": "^4.17.21",
     "mongoose": "^7.5.1",
     "node-cron": "^3.0.3",
+    "node-mailjet": "^6.0.6",
     "pdfkit": "^0.14.0",
     "razorpay": "^2.9.2",
     "uniqid": "^5.4.0"
