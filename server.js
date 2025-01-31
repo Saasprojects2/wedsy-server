@@ -11,7 +11,8 @@ const { EventCompletionChecker } = require("./utils/jobs");
 const app = express();
 
 //Applying middlewares
-app.use(cors());
+// app.use(cors());
+app.use(cors({ origin: "*" })); //Temporary Change
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
