@@ -120,6 +120,10 @@ const VendorSchema = new mongoose.Schema(
       coverPhoto: { type: String, default: "" },
       photos: { type: [String], default: [] },
     },
+    lastActive: {
+      type: Date,
+      default: Date.now(),
+    },
   },
 
   { timestamps: true }
