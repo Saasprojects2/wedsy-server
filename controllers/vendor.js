@@ -175,10 +175,10 @@ const GetAll = (req, res) => {
     if (sort) {
       if (sort === "Orders (Highest to Lowest)") {
         // sortQuery.createdAt = -1;
-        // PENDING
+        // --PendingWork--
       } else if (sort === "Newest (Registration)") {
         // sortQuery.createdAt = 1;
-        // PENDING
+        // --PendingWork--
       } else if (sort === "Newest (Registration)") {
         sortQuery.registrationDate = -1;
       } else if (sort === "Older (Registration)") {
@@ -198,7 +198,19 @@ const GetAll = (req, res) => {
         .then((result) => {
           try {
             const csvStringifier = createObjectCsvStringifier({
-              header: [{ id: "name", title: "Name" }],
+              header: [
+                { id: "name", title: "Name" },
+                { id: "phone", title: "Phone" },
+                { id: "email", title: "Email" },
+                { id: "gender", title: "Gender" },
+                { id: "registrationDate", title: "Registration Date" },
+                { id: "businessName", title: "Business Name" },
+                { id: "businessDescription", title: "Business Description" },
+                { id: "businessAddress.formatted_address", title: "Business Address" },
+                { id: "speciality", title: "Speciality" },
+                { id: "category", title: "Category" },
+                { id: "tag", title: "Tag" },
+              ],
             });
             const header = csvStringifier.getHeaderString();
             const records = csvStringifier.stringifyRecords(result);
@@ -260,6 +272,24 @@ const GetAll = (req, res) => {
         });
       });
   }
+};
+
+const GetVendorLastActive = (req, res) => {
+  const { _id } = req.params;
+  Vendor.findById(_id)
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send({ lastActive: result?.lastActive || "" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).send({
+        message: "error",
+        error,
+      });
+    });
 };
 
 const Get = (req, res) => {
@@ -455,7 +485,7 @@ const Update = (req, res) => {
               ) {
                 updates["gallery.coverPhoto"] = gallery?.coverPhoto;
                 notifications.push({
-                  title: `Vendor Gallery (coverPhoto) Changed`,
+                  title: `${vendor?.name} Gallery (coverPhoto) Changed`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -468,7 +498,7 @@ const Update = (req, res) => {
               ) {
                 updates["gallery.photos"] = gallery?.photos;
                 notifications.push({
-                  title: `Vendor Gallery (photos) Updated`,
+                  title: `${vendor?.name} Gallery (photos) Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -476,7 +506,9 @@ const Update = (req, res) => {
               if (name && name !== vendor.name) {
                 updates.name = name;
                 notifications.push({
-                  title: `Vendor Name Changed: ${vendor.name || ""} to ${name}`,
+                  title: `${vendor?.name} Name Changed: ${
+                    vendor.name || ""
+                  } to ${name}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -484,7 +516,9 @@ const Update = (req, res) => {
               if (tag && tag !== vendor.tag) {
                 updates.tag = tag;
                 notifications.push({
-                  title: `Vendor Tag Changed: ${vendor.tag || ""} to ${tag}`,
+                  title: `${vendor?.name} Tag Changed: ${
+                    vendor.tag || ""
+                  } to ${tag}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -492,7 +526,7 @@ const Update = (req, res) => {
               if (speciality && speciality !== vendor.speciality) {
                 updates.speciality = speciality;
                 notifications.push({
-                  title: `Vendor Speciality Changed: ${
+                  title: `${vendor?.name} Speciality Changed: ${
                     vendor.speciality || ""
                   } to ${speciality}`,
                   category: "Vendor",
@@ -507,7 +541,7 @@ const Update = (req, res) => {
               ) {
                 updates.servicesOffered = servicesOffered;
                 notifications.push({
-                  title: `Vendor Services Offered Changed: ${
+                  title: `${vendor?.name} Services Offered Changed: ${
                     vendor.servicesOffered.join(", ") || ""
                   } to ${servicesOffered.join(", ")}`,
                   category: "Vendor",
@@ -522,7 +556,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.makeupProducts"] = other?.makeupProducts;
                 notifications.push({
-                  title: `Vendor Makeup Products Updated`,
+                  title: `${vendor?.name} Makeup Products Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -535,7 +569,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.awards"] = other?.awards;
                 notifications.push({
-                  title: `Vendor Awards Updated`,
+                  title: `${vendor?.name} Awards Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -546,7 +580,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.experience"] = other?.experience;
                 notifications.push({
-                  title: `Vendor Experience Changed: ${
+                  title: `${vendor?.name} Experience Changed: ${
                     vendor?.other?.experience || ""
                   } to ${other?.experience}`,
                   category: "Vendor",
@@ -556,7 +590,7 @@ const Update = (req, res) => {
               if (other?.clients && other?.clients !== vendor?.other?.clients) {
                 updates["other.clients"] = other?.clients;
                 notifications.push({
-                  title: `Vendor Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
+                  title: `${vendor?.name} Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -564,7 +598,7 @@ const Update = (req, res) => {
               if (other?.usp && other.usp !== vendor?.other?.usp) {
                 updates["other.usp"] = other?.usp;
                 notifications.push({
-                  title: `Vendor Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
+                  title: `${vendor?.name} Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -578,7 +612,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.groomMakeup"] = other.groomMakeup;
                 notifications.push({
-                  title: `Vendor Groom Makeup Status Changed: ${
+                  title: `${vendor?.name} Groom Makeup Status Changed: ${
                     vendor.other.groomMakeup ? "True" : "False"
                   } to ${other.groomMakeup ? "True" : "False"}`,
                   category: "Vendor",
@@ -594,7 +628,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.lgbtqMakeup"] = other.lgbtqMakeup;
                 notifications.push({
-                  title: `Vendor LGBTQ Makeup Status Changed: ${
+                  title: `${vendor?.name} LGBTQ Makeup Status Changed: ${
                     vendor.other.lgbtqMakeup ? "True" : "False"
                   } to ${other.lgbtqMakeup ? "True" : "False"}`,
                   category: "Vendor",
@@ -604,7 +638,7 @@ const Update = (req, res) => {
               if (businessName && businessName !== vendor.businessName) {
                 updates.businessName = businessName;
                 notifications.push({
-                  title: `Vendor Business Name Changed: ${
+                  title: `${vendor?.name} Business Name Changed: ${
                     vendor.businessName || ""
                   } to ${businessName}`,
                   category: "Vendor",
@@ -617,7 +651,7 @@ const Update = (req, res) => {
               ) {
                 updates.businessDescription = businessDescription;
                 notifications.push({
-                  title: `Vendor Business Description Changed: ${
+                  title: `${vendor?.name} Business Description Changed: ${
                     vendor.businessDescription || ""
                   } to ${businessDescription}`,
                   category: "Vendor",
@@ -630,7 +664,7 @@ const Update = (req, res) => {
               ) {
                 updates["businessAddress.state"] = businessAddress?.state;
                 notifications.push({
-                  title: `Vendor State Changed: ${
+                  title: `${vendor?.name} State Changed: ${
                     vendor?.businessAddress?.state || ""
                   } to ${businessAddress?.state}`,
                   category: "Vendor",
@@ -643,7 +677,7 @@ const Update = (req, res) => {
               ) {
                 updates["businessAddress.city"] = businessAddress?.city;
                 notifications.push({
-                  title: `Vendor City Changed: ${
+                  title: `${vendor?.name} City Changed: ${
                     vendor?.businessAddress?.city || ""
                   } to ${businessAddress?.city}`,
                   category: "Vendor",
@@ -656,7 +690,7 @@ const Update = (req, res) => {
               ) {
                 updates["businessAddress.area"] = businessAddress?.area;
                 notifications.push({
-                  title: `Vendor Area Changed: ${
+                  title: `${vendor?.name} Area Changed: ${
                     vendor?.businessAddress?.area || ""
                   } to ${businessAddress?.area}`,
                   category: "Vendor",
@@ -669,7 +703,7 @@ const Update = (req, res) => {
               ) {
                 updates["businessAddress.pincode"] = businessAddress?.pincode;
                 notifications.push({
-                  title: `Vendor Pincode Changed: ${
+                  title: `${vendor?.name} Pincode Changed: ${
                     vendor?.businessAddress?.pincode || ""
                   } to ${businessAddress?.pincode}`,
                   category: "Vendor",
@@ -682,7 +716,7 @@ const Update = (req, res) => {
               ) {
                 updates["businessAddress.address"] = businessAddress?.address;
                 notifications.push({
-                  title: `Vendor Address Changed: ${
+                  title: `${vendor?.name} Address Changed: ${
                     vendor?.businessAddress?.address || ""
                   } to ${businessAddress?.address}`,
                   category: "Vendor",
@@ -697,7 +731,7 @@ const Update = (req, res) => {
                 updates["businessAddress.googleMaps"] =
                   businessAddress?.googleMaps;
                 notifications.push({
-                  title: `Vendor Google Maps Link Changed: ${
+                  title: `${vendor?.name} Google Maps Link Changed: ${
                     vendor?.businessAddress?.googleMaps || ""
                   } to ${businessAddress?.googleMaps}`,
                   category: "Vendor",
@@ -815,7 +849,9 @@ const Update = (req, res) => {
                 };
                 if (notifications?.bidding !== vendor?.notifications?.bidding) {
                   notificationsList.push({
-                    title: `Vendor Bidding Notification Status Changed: ${
+                    title: `${
+                      vendor?.name
+                    } Bidding Notification Status Changed: ${
                       vendor?.notifications?.bidding
                         ?.toString()
                         .toUpperCase() || ""
@@ -830,7 +866,9 @@ const Update = (req, res) => {
                   notifications?.packages !== vendor?.notifications?.packages
                 ) {
                   notificationsList.push({
-                    title: `Vendor Packages Notification Status Changed: ${
+                    title: `${
+                      vendor?.name
+                    } Packages Notification Status Changed: ${
                       vendor?.notifications?.packages
                         ?.toString()
                         .toUpperCase() || ""
@@ -846,7 +884,9 @@ const Update = (req, res) => {
                   vendor?.notifications?.upcomingEvents
                 ) {
                   notificationsList.push({
-                    title: `Vendor Upcoming Events Notification Status Changed: ${
+                    title: `${
+                      vendor?.name
+                    } Upcoming Events Notification Status Changed: ${
                       vendor?.notifications?.upcomingEvents
                         ?.toString()
                         .toUpperCase() || ""
@@ -860,7 +900,9 @@ const Update = (req, res) => {
                 }
                 if (notifications?.booking !== vendor?.notifications?.booking) {
                   notificationsList.push({
-                    title: `Vendor Booking Notification Status Changed: ${
+                    title: `${
+                      vendor?.name
+                    } Booking Notification Status Changed: ${
                       vendor?.notifications?.booking
                         ?.toString()
                         .toUpperCase() || ""
@@ -873,7 +915,9 @@ const Update = (req, res) => {
                 }
                 if (notifications?.payment !== vendor?.notifications?.payment) {
                   notificationsList.push({
-                    title: `Vendor Payment Notification Status Changed: ${
+                    title: `${
+                      vendor?.name
+                    } Payment Notification Status Changed: ${
                       vendor?.notifications?.payment
                         ?.toString()
                         .toUpperCase() || ""
@@ -893,7 +937,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.makeupProducts"] = other?.makeupProducts;
                 notificationsList.push({
-                  title: `Vendor Makeup Products Updated`,
+                  title: `${vendor?.name} Makeup Products Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -906,7 +950,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.awards"] = other?.awards;
                 notificationsList.push({
-                  title: `Vendor Awards Updated`,
+                  title: `${vendor?.name} Awards Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -917,7 +961,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.experience"] = other?.experience;
                 notificationsList.push({
-                  title: `Vendor Experience Changed: ${
+                  title: `${vendor?.name} Experience Changed: ${
                     vendor?.other?.experience || ""
                   } to ${other?.experience}`,
                   category: "Vendor",
@@ -927,7 +971,7 @@ const Update = (req, res) => {
               if (other?.clients && other?.clients !== vendor?.other?.clients) {
                 updates["other.clients"] = other?.clients;
                 notificationsList.push({
-                  title: `Vendor Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
+                  title: `${vendor?.name} Clients Changed: ${vendor?.other?.clients} to ${other?.clients}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -935,7 +979,7 @@ const Update = (req, res) => {
               if (other?.usp && other.usp !== vendor?.other?.usp) {
                 updates["other.usp"] = other?.usp;
                 notificationsList.push({
-                  title: `Vendor Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
+                  title: `${vendor?.name} Usp Changed: ${vendor?.other.usp} to ${other?.usp}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -949,7 +993,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.groomMakeup"] = other.groomMakeup;
                 notificationsList.push({
-                  title: `Vendor Groom Makeup Status Changed: ${
+                  title: `${vendor?.name} Groom Makeup Status Changed: ${
                     vendor.other.groomMakeup ? "True" : "False"
                   } to ${other.groomMakeup ? "True" : "False"}`,
                   category: "Vendor",
@@ -965,7 +1009,7 @@ const Update = (req, res) => {
               ) {
                 updates["other.lgbtqMakeup"] = other.lgbtqMakeup;
                 notificationsList.push({
-                  title: `Vendor LGBTQ Makeup Status Changed: ${
+                  title: `${vendor?.name} LGBTQ Makeup Status Changed: ${
                     vendor.other.lgbtqMakeup ? "True" : "False"
                   } to ${other.lgbtqMakeup ? "True" : "False"}`,
                   category: "Vendor",
@@ -978,7 +1022,7 @@ const Update = (req, res) => {
               ) {
                 updates["gallery.coverPhoto"] = gallery?.coverPhoto;
                 notificationsList.push({
-                  title: `Vendor Gallery (coverPhoto) Changed`,
+                  title: `${vendor?.name} Gallery (coverPhoto) Changed`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -991,7 +1035,7 @@ const Update = (req, res) => {
               ) {
                 updates["gallery.photos"] = gallery?.photos;
                 notificationsList.push({
-                  title: `Vendor Gallery (photos) Updated`,
+                  title: `${vendor?.name} Gallery (photos) Updated`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -999,7 +1043,7 @@ const Update = (req, res) => {
               if (prices?.party && prices?.party !== vendor?.prices?.party) {
                 updates["prices.party"] = prices?.party;
                 notificationsList.push({
-                  title: `Vendor Prices (Party) Changed: ${
+                  title: `${vendor?.name} Prices (Party) Changed: ${
                     vendor?.prices?.party || ""
                   } to ${prices?.party}`,
                   category: "Vendor",
@@ -1009,7 +1053,7 @@ const Update = (req, res) => {
               if (prices?.bridal && prices?.bridal !== vendor?.prices?.bridal) {
                 updates["prices.bridal"] = prices?.bridal;
                 notificationsList.push({
-                  title: `Vendor Prices (Bridal) Changed: ${
+                  title: `${vendor?.name} Prices (Bridal) Changed: ${
                     vendor?.prices?.bridal || ""
                   } to ${prices?.bridal}`,
                   category: "Vendor",
@@ -1019,7 +1063,7 @@ const Update = (req, res) => {
               if (prices?.groom && prices?.groom !== vendor?.prices?.groom) {
                 updates["prices.groom"] = prices?.groom;
                 notificationsList.push({
-                  title: `Vendor Prices (Groom) Changed: ${
+                  title: `${vendor?.name} Prices (Groom) Changed: ${
                     vendor?.prices?.groom || ""
                   } to ${prices?.groom}`,
                   category: "Vendor",
@@ -1032,7 +1076,7 @@ const Update = (req, res) => {
               ) {
                 updates["accountDetails.bankName"] = accountDetails?.bankName;
                 notificationsList.push({
-                  title: `Vendor Account Details Bank Name Changed: ${
+                  title: `${vendor?.name} Account Details Bank Name Changed: ${
                     vendor?.accountDetails?.bankName || ""
                   } to ${accountDetails?.bankName}`,
                   category: "Vendor",
@@ -1047,7 +1091,9 @@ const Update = (req, res) => {
                 updates["accountDetails.accountNumber"] =
                   accountDetails?.accountNumber;
                 notificationsList.push({
-                  title: `Vendor Account Details Account Number Changed: ${
+                  title: `${
+                    vendor?.name
+                  } Account Details Account Number Changed: ${
                     vendor?.accountDetails?.accountNumber || ""
                   } to ${accountDetails?.accountNumber}`,
                   category: "Vendor",
@@ -1060,7 +1106,7 @@ const Update = (req, res) => {
               ) {
                 updates["accountDetails.ifscCode"] = accountDetails?.ifscCode;
                 notificationsList.push({
-                  title: `Vendor Account Details IFSC Code Changed: ${
+                  title: `${vendor?.name} Account Details IFSC Code Changed: ${
                     vendor?.accountDetails?.ifscCode || ""
                   } to ${accountDetails?.ifscCode}`,
                   category: "Vendor",
@@ -1070,7 +1116,7 @@ const Update = (req, res) => {
               if (name && name !== vendor?.name) {
                 updates.name = name;
                 notificationsList.push({
-                  title: `Vendor Name Changed: ${
+                  title: `${vendor?.name} Name Changed: ${
                     vendor?.name || ""
                   } to ${name}`,
                   category: "Vendor",
@@ -1080,7 +1126,7 @@ const Update = (req, res) => {
               if (speciality && speciality !== vendor?.speciality) {
                 updates.speciality = speciality;
                 notificationsList.push({
-                  title: `Vendor Speciality Changed: ${
+                  title: `${vendor?.name} Speciality Changed: ${
                     vendor?.speciality || ""
                   } to ${speciality}`,
                   category: "Vendor",
@@ -1095,7 +1141,7 @@ const Update = (req, res) => {
               ) {
                 updates.servicesOffered = servicesOffered;
                 notificationsList.push({
-                  title: `Vendor Services Offered Changed: ${
+                  title: `${vendor?.name} Services Offered Changed: ${
                     vendor?.servicesOffered.join(", ") || ""
                   } to ${servicesOffered.join(", ")}`,
                   category: "Vendor",
@@ -1105,7 +1151,7 @@ const Update = (req, res) => {
               if (businessName && businessName !== vendor?.businessName) {
                 updates.businessName = businessName;
                 notificationsList.push({
-                  title: `Vendor Business Name Changed: ${
+                  title: `${vendor?.name} Business Name Changed: ${
                     vendor?.businessName || ""
                   } to ${businessName}`,
                   category: "Vendor",
@@ -1118,17 +1164,17 @@ const Update = (req, res) => {
               ) {
                 updates.businessDescription = businessDescription;
                 notificationsList.push({
-                  title: `Vendor Business Description Changed: ${
+                  title: `${vendor?.name} Business Description Changed: ${
                     vendor?.businessDescription || ""
                   } to ${businessDescription}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
               }
-              if(!_.isEqual(businessAddress, vendor?.businessAddress)){
+              if (!_.isEqual(businessAddress, vendor?.businessAddress)) {
                 updates["businessAddress"] = businessAddress;
                 notificationsList.push({
-                  title: `Vendor Business Address Changed`,
+                  title: `${vendor?.name} Business Address Changed`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
@@ -1303,4 +1349,5 @@ module.exports = {
   Delete,
   DeleteVendors,
   AddNotes,
+  GetVendorLastActive,
 };
