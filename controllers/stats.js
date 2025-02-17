@@ -61,6 +61,61 @@ const GetStatistics = async (req, res) => {
       );
       stats = finalizedForToday.length;
       res.send({ message: "success", stats });
+    } else if (key === "tomorrow-order-wedsy-packages") {
+      let stats = 0;
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrow = tomorrowDate.toISOString().split("T")[0];
+      const finalizedOrders = await Order.find({
+        source: "Wedsy-Package",
+        "status.finalized": true,
+      }).populate("wedsyPackageBooking");
+      const finalizedForTomorrow = finalizedOrders.filter(
+        (order) =>
+          order.wedsyPackageBooking &&
+          new Date(order.wedsyPackageBooking.date)
+            .toISOString()
+            .split("T")[0] === tomorrow
+      );
+      stats = finalizedForTomorrow.length;
+      res.send({ message: "success", stats });
+    } else if (key === "tomorrow-order-personal-packages") {
+      let stats = 0;
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrow = tomorrowDate.toISOString().split("T")[0];
+      const finalizedOrders = await Order.find({
+        source: "Personal-Package",
+        "status.finalized": true,
+      }).populate("vendorPersonalPackageBooking");
+      const finalizedForTomorrow = finalizedOrders.filter(
+        (order) =>
+          order.vendorPersonalPackageBooking &&
+          new Date(order.vendorPersonalPackageBooking.date)
+            .toISOString()
+            .split("T")[0] === tomorrow
+      );
+      stats = finalizedForTomorrow.length;
+      res.send({ message: "success", stats });
+    } else if (key === "tomorrow-order-bidding") {
+      let stats = 0;
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrow = tomorrowDate.toISOString().split("T")[0];
+      const finalizedOrders = await Order.find({
+        source: "Bidding",
+        "status.finalized": true,
+      }).populate("biddingBooking");
+      const finalizedForTomorrow = finalizedOrders.filter(
+        (order) =>
+          order.biddingBooking &&
+          order.biddingBooking?.events?.some(
+            (event) =>
+              new Date(event.date).toISOString().split("T")[0] === tomorrow
+          )
+      );
+      stats = finalizedForTomorrow.length;
+      res.send({ message: "success", stats });
     } else {
       res.send({ message: "failure" });
     }
