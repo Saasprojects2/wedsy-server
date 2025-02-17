@@ -150,7 +150,7 @@ const EventSchema = new mongoose.Schema(
               {
                 title: { type: String, required: true },
                 image: { type: String, default: "" },
-                description: { type: String, required: true },
+                description: { type: String, default: "" },
                 price: { type: Number, default: 0 },
                 itemRequired: { type: Boolean, default: false },
                 includeInTotalSummary: {
