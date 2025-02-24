@@ -1,12 +1,55 @@
 const User = require("../models/User");
 const Order = require("../models/Order");
 const Vendor = require("../models/Vendor");
+const VendorStatLog = require("../models/VendorStatLog");
+const { default: mongoose } = require("mongoose");
 
 const GetStatistics = async (req, res) => {
   const { user_id, user, isAdmin, isVendor } = req.auth;
   const { key } = req.query;
   if (isAdmin) {
-    if (key === "total-vendors") {
+    if (key === "vendor-analytics") {
+      const { vendor } = req.query;
+      try {
+        const stats = await VendorStatLog.aggregate([
+          {
+            $match: { vendor: new mongoose.Types.ObjectId(vendor) }, // Filter by vendor
+          },
+          {
+            $group: {
+              _id: {
+                month: { $month: "$createdAt" },
+                year: { $year: "$createdAt" },
+              },
+              calls: {
+                $sum: {
+                  $cond: [{ $eq: ["$statType", "call"] }, 1, 0],
+                },
+              },
+              chats: {
+                $sum: {
+                  $cond: [{ $eq: ["$statType", "chat"] }, 1, 0],
+                },
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              month: "$_id.month",
+              year: "$_id.year",
+              calls: 1,
+              chats: 1,
+            },
+          },
+          { $sort: { year: 1, month: 1 } }, // Sort by year and month
+        ]);
+        res.send({ message: "success", stats });
+      } catch (error) {
+        console.error("Error fetching vendor stats:", error);
+        res.send({ message: "error", error });
+      }
+    } else if (key === "total-vendors") {
       const totalVendors = await Vendor.countDocuments();
       res.send({ message: "success", stats: totalVendors });
     } else if (key === "total-users") {
@@ -126,4 +169,72 @@ const GetStatistics = async (req, res) => {
   }
 };
 
-module.exports = { GetStatistics };
+const GetStatisticsList = async (req, res) => {
+  const { user_id, user, isAdmin, isVendor } = req.auth;
+  const { key } = req.query;
+  if (isAdmin) {
+    if (key === "vendor-call") {
+      const { vendor } = req.query;
+      try {
+        const list = await VendorStatLog.find({
+          vendor,
+          statType: "call",
+        }).populate("user", "name email phone");
+        res.send({ message: "success", list });
+      } catch (error) {
+        console.error("Error fetching vendor stats:", error);
+        res.send({ message: "error", error });
+      }
+    } else {
+      res.send({ message: "failure" });
+    }
+  } else if (isVendor) {
+    res.send({ message: "failure" });
+  } else {
+    res.send({ message: "failure" });
+  }
+};
+
+const AddStatLog = async (req, res) => {
+  const { user_id, user, isAdmin, isVendor } = req.auth;
+  const { key } = req.query;
+  if (isAdmin) {
+    res.send({ message: "failure" });
+  } else if (isVendor) {
+    res.send({ message: "failure" });
+  } else {
+    if (key === "vendor-call") {
+      const { vendor } = req.body;
+      new VendorStatLog({
+        vendor,
+        user: user_id,
+        statType: "call",
+      })
+        .save()
+        .then((result) => {
+          res.status(201).send({ message: "success" });
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    } else if (key === "vendor-chat") {
+      const { vendor } = req.body;
+      new VendorStatLog({
+        vendor,
+        user: user_id,
+        statType: "chat",
+      })
+        .save()
+        .then((result) => {
+          res.status(201).send({ message: "success" });
+        })
+        .catch((error) => {
+          res.status(400).send({ message: "error", error });
+        });
+    } else {
+      res.send({ message: "failure" });
+    }
+  }
+};
+
+module.exports = { GetStatistics, AddStatLog, GetStatisticsList };
