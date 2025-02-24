@@ -28,11 +28,13 @@ const CreateNew = (req, res) => {
 };
 
 const GetAll = (req, res) => {
-  const { user_id, isVendor } = req.auth;
+  const { user_id, isVendor, isAdmin } = req.auth;
   const { vendorId } = req.query;
   const query = {};
   if (isVendor) {
     query.vendor = user_id;
+  } else if (!isAdmin) {
+    query.active = { $ne: false };
   }
   if (vendorId) {
     query.vendor = vendorId;
@@ -94,6 +96,32 @@ const Update = (req, res) => {
   }
 };
 
+const UpdateStatus = (req, res) => {
+  const { _id } = req.params;
+  const { user_id, isAdmin, isVendor } = req.auth;
+  const { active } = req.body;
+  if (!isAdmin && !isVendor) {
+    res.status(401).send({ message: "Unauthorized access" });
+  } else if (active === undefined || active === null) {
+    res.status(400).send({ message: "Incomplete Data" });
+  } else {
+    VendorPersonalPackage.findOneAndUpdate(
+      isVendor ? { _id, vendor: user_id } : { _id },
+      { $set: { active } }
+    )
+      .then((result) => {
+        if (result) {
+          res.status(200).send({ message: "success" });
+        } else {
+          res.status(404).send({ message: "not found" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const Delete = (req, res) => {
   const { user_id, isAdmin, isVendor } = req.auth;
   const { _id } = req.params;
@@ -121,5 +149,6 @@ module.exports = {
   GetAll,
   Get,
   Update,
+  UpdateStatus,
   Delete,
 };
