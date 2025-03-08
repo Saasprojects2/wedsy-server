@@ -29,6 +29,8 @@ const GetAll = (req, res) => {
   } else if (!isAdmin) {
     query.user = user_id;
     populate = "vendor";
+  } else {
+    populate = "vendor user";
   }
   Chat.find(query)
     .populate(populate)
