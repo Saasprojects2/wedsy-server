@@ -3,6 +3,8 @@ const Order = require("../models/Order");
 const Vendor = require("../models/Vendor");
 const VendorStatLog = require("../models/VendorStatLog");
 const { default: mongoose } = require("mongoose");
+const Chat = require("../models/Chat");
+const Payment = require("../models/Payment");
 
 const GetStatistics = async (req, res) => {
   const { user_id, user, isAdmin, isVendor } = req.auth;
@@ -49,6 +51,9 @@ const GetStatistics = async (req, res) => {
         console.error("Error fetching vendor stats:", error);
         res.send({ message: "error", error });
       }
+    } else if (key === "total-ongoing-chats") {
+      const totalOngoingChats = await Chat.countDocuments();
+      res.send({ message: "success", stats: totalOngoingChats });
     } else if (key === "total-vendors") {
       const totalVendors = await Vendor.countDocuments();
       res.send({ message: "success", stats: totalVendors });
@@ -158,6 +163,92 @@ const GetStatistics = async (req, res) => {
           )
       );
       stats = finalizedForTomorrow.length;
+      res.send({ message: "success", stats });
+    } else if (key === "makeup-payments-total-today") {
+      let stats = 0;
+      const now = new Date();
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
+      const startOfTomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      const paymentsTotalToday = await Payment.aggregate([
+        {
+          $match: {
+            status: "paid",
+            paymentFor: "makeup-and-beauty",
+            createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
+          },
+        },
+        {
+          $group: { _id: null, totalAmount: { $sum: "$amountPaid" } },
+        },
+      ])
+        .then((result) => {
+          const totalToday = result[0] ? result[0].totalAmount : 0;
+          return totalToday;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      stats = paymentsTotalToday / 100;
+      res.send({ message: "success", stats });
+    } else if (key === "makeup-payments-total-month") {
+      let stats = 0;
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfNextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        1
+      );
+      const paymentsTotalMonth = await Payment.aggregate([
+        {
+          $match: {
+            status: "paid",
+            paymentFor: "makeup-and-beauty",
+            createdAt: { $gte: startOfMonth, $lt: startOfNextMonth },
+          },
+        },
+        {
+          $group: { _id: null, totalAmount: { $sum: "$amountPaid" } },
+        },
+      ])
+        .then((result) => {
+          const totalMonth = result[0] ? result[0].totalAmount : 0;
+          return totalMonth;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      stats = paymentsTotalMonth / 100;
+      res.send({ message: "success", stats });
+    } else if (key === "makeup-payments-total-overall") {
+      let stats = 0;
+      const paymentsTotalOverall = await Payment.aggregate([
+        {
+          $match: {
+            status: "paid",
+            paymentFor: "makeup-and-beauty",
+          },
+        },
+        {
+          $group: { _id: null, totalAmount: { $sum: "$amountPaid" } },
+        },
+      ])
+        .then((result) => {
+          const totalOverall = result[0] ? result[0].totalAmount : 0;
+          return totalOverall;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      stats = paymentsTotalOverall / 100;
       res.send({ message: "success", stats });
     } else {
       res.send({ message: "failure" });
