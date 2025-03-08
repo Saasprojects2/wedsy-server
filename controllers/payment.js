@@ -335,7 +335,7 @@ const GetAllPayments = async (req, res) => {
   const { user_id, isAdmin } = req.auth;
   if (isAdmin) {
     // Admin Controller
-    const { status, sort } = req.query;
+    const { status, sort, paymentFor } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const query = {};
@@ -350,10 +350,13 @@ const GetAllPayments = async (req, res) => {
         sortQuery["amount"] = -1;
       }
     }
+    if (paymentFor) {
+      query.paymentFor = paymentFor;
+    }
     Payment.countDocuments(query)
       .then(async (total) => {
         const totalPages = Math.ceil(total / limit);
-        const validPage = page % totalPages;
+        const validPage = page !== totalPages ? page % totalPages : totalPages;
         const skip =
           validPage === 0 || validPage === null || validPage === undefined
             ? 0
@@ -372,7 +375,7 @@ const GetAllPayments = async (req, res) => {
           .sort(sortQuery)
           .skip(skip)
           .limit(limit)
-          .populate("user event")
+          .populate("user event order")
           .exec()
           .then((result) => {
             res.send({
