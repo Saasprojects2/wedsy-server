@@ -10,7 +10,47 @@ const GetStatistics = async (req, res) => {
   const { user_id, user, isAdmin, isVendor } = req.auth;
   const { key } = req.query;
   if (isAdmin) {
-    if (key === "vendor-analytics") {
+    if (key === "vendor-business-monthly") {
+      const { vendor } = req.query;
+      try {
+        const vendorInfo = await Vendor.findOne({ _id: vendor });
+        const registrationDate = new Date(vendorInfo?.registrationDate);
+        const currentDate = new Date();
+        const stats = [];
+        while (registrationDate <= currentDate) {
+          // Append month to list
+          stats.push({
+            month: `${
+              [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+              ][registrationDate.getMonth()]
+            } ${registrationDate.getFullYear()}`,
+            wedsyPackagesAmount: 0,
+            personalPackagesAmount: 0,
+            biddingAmount: 0,
+            wedsyPackagesCount: 0,
+            personalPackagesCount: 0,
+            biddingCount: 0,
+          });
+          registrationDate.setMonth(registrationDate.getMonth() + 1);
+        }
+        res.send({ message: "success", stats });
+      } catch (error) {
+        console.error("Error fetching vendor stats:", error);
+        res.send({ message: "error", error });
+      }
+    } else if (key === "vendor-analytics") {
       const { vendor } = req.query;
       try {
         const stats = await VendorStatLog.aggregate([
