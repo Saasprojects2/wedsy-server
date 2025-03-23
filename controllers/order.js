@@ -378,10 +378,35 @@ const GetOrder = (req, res) => {
         });
     }
   } else if (isAdmin) {
-    res.status(400).send({
-      message: "error",
-      error: {},
-    });
+    Order.findOne({ _id })
+      .populate("biddingBooking")
+      .populate({
+        path: "vendorPersonalPackageBooking",
+        populate: {
+          path: "personalPackages.package",
+        },
+      })
+      .populate("user")
+      .populate("vendor")
+      .populate({
+        path: "wedsyPackageBooking",
+        populate: {
+          path: "wedsyPackages.package",
+        },
+      })
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send(result);
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({
+          message: "error",
+          error,
+        });
+      });
   } else {
     const { populate } = req.query;
     if (populate === "true") {
