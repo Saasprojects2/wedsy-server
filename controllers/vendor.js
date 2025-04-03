@@ -16,6 +16,7 @@ const CreateNew = (req, res) => {
     category,
     Otp,
     ReferenceId,
+    dob,
   } = req.body;
   if (
     !name ||
@@ -43,6 +44,7 @@ const CreateNew = (req, res) => {
                   phone,
                   email,
                   gender,
+                  dob,
                   servicesOffered,
                   category,
                 })
@@ -206,7 +208,10 @@ const GetAll = (req, res) => {
                 { id: "registrationDate", title: "Registration Date" },
                 { id: "businessName", title: "Business Name" },
                 { id: "businessDescription", title: "Business Description" },
-                { id: "businessAddress.formatted_address", title: "Business Address" },
+                {
+                  id: "businessAddress.formatted_address",
+                  title: "Business Address",
+                },
                 { id: "speciality", title: "Speciality" },
                 { id: "category", title: "Category" },
                 { id: "tag", title: "Tag" },
@@ -775,6 +780,7 @@ const Update = (req, res) => {
       prices,
       gallery,
       other,
+      profileCompleted,
     } = req.body;
     if (
       !name &&
@@ -825,6 +831,16 @@ const Update = (req, res) => {
             } else {
               const updates = {};
               const notificationsList = [];
+              if (profileCompleted === true) {
+                updates.profileCompleted = true;
+                if (notifications?.bidding !== vendor?.notifications?.bidding) {
+                  notificationsList.push({
+                    title: `${vendor?.name} Profile Completed`,
+                    category: "Vendor",
+                    references: { vendor: vendor._id },
+                  });
+                }
+              }
               if (
                 [
                   notifications?.bidding,
