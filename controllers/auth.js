@@ -212,6 +212,8 @@ const GetVendor = (req, res) => {
     businessDescription,
     speciality,
     servicesOffered,
+    profileCompleted,
+    paymentCompleted,
   } = user;
   const { groomMakeup, onlyHairStyling } = other;
   const { searchFor } = req.query;
@@ -237,7 +239,15 @@ const GetVendor = (req, res) => {
       });
     }
   } else {
-    res.send({ name, phone, email, notifications, category });
+    res.send({
+      name,
+      phone,
+      email,
+      notifications,
+      category,
+      profileCompleted,
+      paymentCompleted,
+    });
   }
 };
 const GetOTP = (req, res) => {
