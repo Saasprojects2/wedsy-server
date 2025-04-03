@@ -44,6 +44,7 @@ router.use("/notification", require("./notification"));
 router.use("/vendor", require("./vendor"));
 router.use("/vendor-category", require("./vendor-category"));
 router.use("/vendor-preferred-look", require("./vendor-preferred-look"));
+router.use("/vendor-speciality", require("./vendor-speciality"));
 router.use("/vendor-makeup-style", require("./vendor-makeup-style"));
 router.use("/vendor-add-ons", require("./vendor-add-ons"));
 router.use("/tag", require("./tag"));
