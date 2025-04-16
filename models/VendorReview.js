@@ -4,9 +4,13 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 // Ratings, User, Date/Time, Text, Multiple Image, Like & Reply
 const VendorReviewSchema = new mongoose.Schema(
   {
-    title: {
+    review: {
       type: String,
       required: true,
+    },
+    images: {
+      type: [String],
+      default: [],
     },
     rating: {
       type: Number,
@@ -17,19 +21,8 @@ const VendorReviewSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    body: {
-      type: String,
-      required: true,
-    },
-    author: {
-      anonymous: { type: Boolean, default: false },
-      id: { type: ObjectId, required: true },
-      role: {
-        type: String,
-        enum: ["", "user", "vendor", "admin"],
-        default: "",
-      },
-    },
+    vendor: { type: ObjectId, required: true, ref: "Vendor" },
+    user: { type: ObjectId, required: true, ref: "User" },
     likes: {
       type: [
         {
