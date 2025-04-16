@@ -24,9 +24,10 @@ const PriceVariationSchema = new mongoose.Schema(
     },
     categories: { type: [String], default: [] },
     status: {
-      type: Boolean,
+      type: String,
       required: true,
-      default: false,
+      default: "Pending",
+      enum: ["Pending", "Completed", "Reverted"],
     },
   },
   { timestamps: true }
