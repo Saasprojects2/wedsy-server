@@ -451,6 +451,7 @@ const Update = (req, res) => {
         speciality,
         gallery,
         other,
+        rating,
       } = req.body;
       if (
         !name &&
@@ -473,7 +474,8 @@ const Update = (req, res) => {
         other?.makeupProducts?.length === 0 &&
         other?.awards?.length === 0 &&
         !gallery?.coverPhoto &&
-        gallery?.photos?.length === 0
+        gallery?.photos?.length === 0 &&
+        ![1, 2, 3, 4, 5].includes(rating)
       ) {
         res.status(400).send({ message: "Incomplete Data" });
       } else {
@@ -504,6 +506,16 @@ const Update = (req, res) => {
                 updates["gallery.photos"] = gallery?.photos;
                 notifications.push({
                   title: `${vendor?.name} Gallery (photos) Updated`,
+                  category: "Vendor",
+                  references: { vendor: vendor._id },
+                });
+              }
+              if (rating && rating !== vendor.rating) {
+                updates.rating = rating;
+                notifications.push({
+                  title: `${vendor?.rating} Rating Changed: ${
+                    vendor.rating || ""
+                  } to ${rating}`,
                   category: "Vendor",
                   references: { vendor: vendor._id },
                 });
