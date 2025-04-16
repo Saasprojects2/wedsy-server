@@ -105,6 +105,17 @@ const VendorSchema = new mongoose.Schema(
       accountNumber: { type: String, default: "" },
       ifscCode: { type: String, default: "" },
     },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+      default: 3,
+      validate: {
+        validator: Number.isInteger,
+        message: "{VALUE} is not an integer value",
+      },
+    },
     prices: {
       party: {
         type: Number,
