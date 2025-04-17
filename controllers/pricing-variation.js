@@ -83,11 +83,6 @@ async function RevertPricingVariation(_id) {
     } else if (pricingType === "CostPrice") {
       pricingType = "costPrice";
     }
-    if (variationType === "Increase") {
-      variationType = "Decrease";
-    } else if (variationType === "Decrease") {
-      variationType = "Increase";
-    }
     const query = {
       $or: [{ _id: { $in: decorItems } }, { category: { $in: categories } }],
     };
@@ -103,14 +98,14 @@ async function RevertPricingVariation(_id) {
           if (amount !== null && amount !== undefined) {
             newValue =
               variationType === "Increase"
-                ? newValue + amount
-                : newValue - amount;
+                ? newValue - amount
+                : newValue + amount;
           }
           if (percentage !== null && percentage !== undefined) {
             newValue =
               variationType === "Increase"
-                ? newValue * (1 + percentage / 100)
-                : newValue * (1 - percentage / 100);
+                ? newValue / (1 + percentage / 100)
+                : newValue / (1 - percentage / 100);
           }
           if (newValue < 0) {
             return pt;
