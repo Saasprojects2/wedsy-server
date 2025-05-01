@@ -457,6 +457,24 @@ const Update = (req, res) => {
   }
 };
 
+const UpdateLead = (req, res) => {
+  const { _id } = req.params;
+  const { name } = req.body;
+  if (name) {
+    Enquiry.findByIdAndUpdate({ _id }, { $set: { name } })
+      .then((result) => {
+        if (!result) {
+          res.status(404).send();
+        } else {
+          res.send({ message: "success" });
+        }
+      })
+      .catch((error) => {
+        res.status(400).send({ message: "error", error });
+      });
+  }
+};
+
 const Delete = (req, res) => {
   const { leadIds } = req.body;
   Enquiry.deleteMany({ _id: { $in: leadIds } })
@@ -637,6 +655,7 @@ module.exports = {
   GetAll,
   Get,
   Update,
+  UpdateLead,
   Delete,
   CreateUser,
   AddConversation,
