@@ -20,9 +20,7 @@ const CreateVendorSettlementAccount = (req, res) => {
     !category ||
     !subcategory ||
     addresses === null ||
-    addresses === undefined ||
-    !pan ||
-    !gst
+    addresses === undefined
   ) {
     res.status(400).send({ message: "Incomplete Data" });
   } else {
@@ -53,8 +51,8 @@ const CreateVendorSettlementAccount = (req, res) => {
         // },
       },
       legal_info: {
-        pan, //: "AAACL1234C",
-        gst, //: "18AABCU9603R1ZM",
+        pan: pan ?? "", //: "AAACL1234C",
+        gst: gst ?? "", //: "18AABCU9603R1ZM",
       },
     });
     let config = {
@@ -227,6 +225,7 @@ const UpdateVendorSettlementProduct = (req, res) => {
                   },
                   razporPay_product_status: result?.activation_status,
                   razorPay_setup_completed: true,
+                  paymentCompleted: true,
                 },
               }
             ).then((r) => {
