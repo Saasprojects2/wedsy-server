@@ -19,8 +19,7 @@ RUN npm install && \
 COPY . .
 
 # Build the TypeScript application and keep only production dependencies
-RUN npm run build && \
-    npm prune --production
+RUN npm prune --production
 
 # Expose the port the app runs on
 EXPOSE 5000
