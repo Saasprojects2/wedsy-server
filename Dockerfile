@@ -2,21 +2,17 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# Install OpenSSL (required for Prisma) & curl and clean up in the same layer
+# Install curl and clean up in the same layer
 RUN apt-get update -y && \
-    apt-get install -y openssl curl && \
+    apt-get install -y curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Copy prisma schema first
-COPY prisma ./prisma/
-
-# Install dependencies, generate Prisma client and clean npm cache
+# Install dependencies and clean npm cache
 RUN npm install && \
-    npx prisma generate && \
     npm cache clean --force
 
 # Copy the rest of the application
